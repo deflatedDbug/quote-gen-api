@@ -1,15 +1,17 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template_string
 from ultralytics import YOLO
 import uuid
-import cv2
 import os
 import pandas as pd
 from decimal import Decimal, ROUND_HALF_UP
 
 app = Flask(__name__)
 
-model_weights = r"C:\Users\Subin Lebow\Desktop\yoloV8\runs\detect\train\weights\best.pt"
-model = YOLO(model_weights)
+model_weights = "./runs/train/weights/last.pt"
+current_working_directory = os.getcwd()
+model_weights_path = os.path.join('runs', 'detect','train', 'weights', 'best.pt')
+print("Trying to load model from:", model_weights_path)
+model = YOLO(model_weights_path)
 
 class_names = {
     0: 'standard-seat',
@@ -22,18 +24,28 @@ class_names = {
     7: 'wedge-seat',
 }
 
-def get_pandas(results):
 
-    if isinstance(results, list) and len(results) > 0:
-        results = results[0]
-    boxes_data = results.boxes.data.cpu().numpy()
-    columns = ['x_min', 'y_min', 'x_max', 'y_max', 'confidence', 'class_id']
-    df = pd.DataFrame(boxes_data, columns=columns)
-    
-    # Map class_id to class_name (Make sure to replace 'class_names' with actual names from the model
-    df['class_name'] = df['class_id'].apply(lambda x: results.names[int(x)])  # 'class_names' needs to be defined as shown before
+INDEX_HTML = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lovesac Quote Generator</title>
+</head>
+<body>
+    <h2>Lovesac Quote Generator</h2>
+    <form method="POST" action="/generate-quote" enctype="multipart/form-data">
+        <input type="file" name="image" accept="image/*" capture="environment" required>
+        <input type="submit" value="Generate Quote">
+    </form>
+</body>
+</html>
+"""
 
-    return df
+@app.route('/')
+def index():
+    return render_template_string(INDEX_HTML)
 
 @app.route('/generate-quote', methods=['POST'])
 def generate_quote_endpoint():
@@ -55,9 +67,22 @@ def generate_quote_endpoint():
     detections = get_pandas(results)
 
     quote = generate_quote_from_detections(detections)
-
+    print("Current Working Directory:", os.getcwd())
     os.remove(image_path)
     return jsonify(quote)
+
+def get_pandas(results):
+
+    if isinstance(results, list) and len(results) > 0:
+        results = results[0]
+    boxes_data = results.boxes.data.cpu().numpy()
+    columns = ['x_min', 'y_min', 'x_max', 'y_max', 'confidence', 'class_id']
+    df = pd.DataFrame(boxes_data, columns=columns)
+    
+    # Map class_id to class_name (Make sure to replace 'class_names' with actual names from the model
+    df['class_name'] = df['class_id'].apply(lambda x: results.names[int(x)])  # 'class_names' needs to be defined as shown before
+
+    return df
 
 def generate_quote_from_detections(detections):
     price_list = {
@@ -97,4 +122,4 @@ def generate_quote_from_detections(detections):
     return quote
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
