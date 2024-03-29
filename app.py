@@ -1,8 +1,9 @@
-from flask import Flask, request, jsonify, render_template_string
+from flask import Flask, request, jsonify, render_template, render_template_string
 from ultralytics import YOLO
 import uuid
 import os
 import pandas as pd
+from datetime import datetime, timedelta
 from decimal import Decimal, ROUND_HALF_UP
 
 app = Flask(__name__)
@@ -24,33 +25,20 @@ class_names = {
     7: 'wedge-seat',
 }
 
-
-INDEX_HTML = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lovesac Quote Generator</title>
-</head>
-<body>
-    <h2>Lovesac Quote Generator</h2>
-    <form method="POST" action="/generate-quote" enctype="multipart/form-data">
-        <input type="file" name="image" accept="image/*" capture="environment" required>
-        <input type="submit" value="Generate Quote">
-    </form>
-</body>
-</html>
-"""
-
 @app.route('/')
 def index():
-    return render_template_string(INDEX_HTML)
+    return render_template('index.html')
 
 @app.route('/generate-quote', methods=['POST'])
+
 def generate_quote_endpoint():
     if 'image' not in request.files:
         return jsonify({'error': 'No image provided.'}), 400
+    
+    image_file = request.files['image']
+    
+    if image_file.filename == '':
+        return 'No Image selected', 400
     
     unique_filename = str(uuid.uuid4()) + ".jpg"
 
@@ -62,14 +50,20 @@ def generate_quote_endpoint():
     image.save(image_path)
 
     results = model(image_path, save=True)
-    print(type(results))
-    print(results)
     detections = get_pandas(results)
 
     quote = generate_quote_from_detections(detections)
-    print("Current Working Directory:", os.getcwd())
+
+    client_name = request.form.get('client_name')
+    client_address = request.form.get('client_address')
+    
+    items = quote['items']
+    subtotal = quote['subtotal']
+    total = quote['total']
+    date = datetime.now()
+
     os.remove(image_path)
-    return jsonify(quote)
+    return render_template('quote_template.html', items=items, subtotal = subtotal, total = total, created_date = date.strftime("%B %d, %Y"), client_name=client_name, client_address=client_address)
 
 def get_pandas(results):
 

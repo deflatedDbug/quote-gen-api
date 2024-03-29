@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales Quote</title>
+<style>
+  body {
+    font-family: 'Arial', sans-serif;
+    margin: 20px;
+    padding: 20px;
+    background: #f2f2f2;
+  }
+  .container {
+    max-width: 800px;
+    margin: auto;
+    background: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 50px;
+  }
+  .header h1 {
+    font-size: 50px;
+    margin: 0;
+    color: #333;
+  }
+  .header p {
+    font-size: 20px;
+    color: #666;
+  }
+  .client-info, .quote-info {
+    font-size: 18px;
+    margin-bottom: 30px;
+    color: #333;
+  }
+  .quote-info {
+    text-align: right;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th {
+    text-align: left;
+    background-color: #f2f2f2;
+    color: #333;
+    padding: 10px 0;
+  }
+  td {
+    padding: 10px 0;
+    border-bottom: 1px solid #ddd;
+  }
+  .total {
+    font-size: 24px;
+    font-weight: bold;
+    text-align: right;
+    padding-top: 20px;
+  }
+  footer {
+    text-align: center;
+    padding: 20px 0;
+    background-color: #f1f1f1;
+    border-top: 1px solid #eaeaea;
+    color: #666;
+  }
+  .footer p {
+    margin: 0;
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <p>Lovesac<br>Two Landmark Sq. Suite 300<br>Stamford, CT 06901</p>
+    <h1>Sales Quote</h1>
+    <p>QUOTE #0001</p>
+  </div>
+
+  <div class="client-info">
+    {{client_name}}<br>
+    {{client_address}}
+  </div>
+
+  <div class="quote-info">
+   Date: {{created_date}}
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ITEM</th>
+        <th>QTY</th>
+        <th>PRICE</th>
+        <th>TOTAL</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td>{{ item.name }}</td>
+        <td>{{ item.quantity }}</td>
+        <td>${{ '%.2f' | format(item.price / item.quantity) }}</td>
+        <td>${{ '%.2f' | format(item.price) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="total">
+    Total: ${{ '%.2f' | format(total) }}
+  </div>
+</div>
+
+</body>
+<footer>
+    <p>© 2024 Subin Lebow. All rights reserved.</p>
+</footer>
+</html>
