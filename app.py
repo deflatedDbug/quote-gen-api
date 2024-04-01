@@ -49,9 +49,7 @@ price_list_lovesoft = {
     "wedge-seat": Decimal('675.00'),
 }
 
-def get_states(country_code):
-    states = get_states_by_country_code(country_code)
-    return jsonify(states)
+
 
 def generate_quote_id():
     timestamp = datetime.now().strftime("%f")[-2:]
@@ -59,6 +57,7 @@ def generate_quote_id():
     random_part = ''.join(random.choices(string.ascii_letters + string.digits, k=5))
     
     return timestamp + random_part
+
 
 @app.route('/')
 def index():
@@ -88,7 +87,7 @@ def generate_quote_endpoint():
     detections = get_pandas(results)
     
     quote_id = generate_quote_id()
-
+    discount_percent = Decimal(request.form.get('discount_percent', 0))
     quote = generate_quote_from_detections(detections)
 
     client_firstName = request.form.get('client_firstName')
@@ -98,13 +97,20 @@ def generate_quote_endpoint():
     client_state = request.form.get('client_state')
     client_zip = request.form.get('client_zip')
     
+    subtotal = Decimal(quote['subtotal'])
+    if discount_percent > Decimal('0'): 
+        discount_multiplier = Decimal('1') - (discount_percent / Decimal('100'))
+        subtotal -= discount_multiplier
+    
+    tax_rate = Decimal('1.07')
     items = quote['items']
-    subtotal = quote['subtotal']
-    total = quote['total']
+    total = subtotal * tax_rate
     created_date = datetime.now().strftime("%B %d, %Y")
-
+    
+    formatted_subtotal = float(subtotal.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
+    formatted_total = float(total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
     os.remove(image_path)
-    return render_template('quote_template.html', items=items, subtotal = subtotal, total = total, created_date=created_date, client_firstName=client_firstName, client_lastName=client_lastName, client_streetAddress=client_streetAddress, client_city=client_city, client_state = client_state, client_zip=client_zip, quote_id=quote_id, price_option=quote['price_option'])
+    return render_template('quote_template.html', items=items, subtotal = formatted_subtotal, total = formatted_total, created_date=created_date, client_firstName=client_firstName, client_lastName=client_lastName, client_streetAddress=client_streetAddress, client_city=client_city, client_state = client_state, client_zip=client_zip, quote_id=quote_id, price_option=quote['price_option'])
 
 def get_pandas(results):
 
