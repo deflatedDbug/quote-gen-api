@@ -78,9 +78,8 @@ def get_pandas(results):
     boxes_data = results.boxes.data.cpu().numpy()
     columns = ['x_min', 'y_min', 'x_max', 'y_max', 'confidence', 'class_id']
     df = pd.DataFrame(boxes_data, columns=columns)
-    
-    # Map class_id to class_name (Make sure to replace 'class_names' with actual names from the model
-    df['class_name'] = df['class_id'].apply(lambda x: results.names[int(x)])  # 'class_names' needs to be defined as shown before
+
+    df['class_name'] = df['class_id'].apply(lambda x: results.names[int(x)]) 
 
     return df
 

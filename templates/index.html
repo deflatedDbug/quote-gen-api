@@ -1,40 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lovesac Quote Generator</title>
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background: #f7f7f7;
-            padding: 20px;
-            margin: 0;
-        }
-        .container {
-            max-width: 600px;
-            margin: 20px auto;
-            background: #fff;
-            padding: 30px;
-            border: 1px solid #dcdcdc;
-            border-radius: 8px;
-        }
+      body {
+        font-family: "Arial", sans-serif;
+        background: #f7f7f7;
+        padding: 20px;
+        margin: 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 20px auto;
+        background: #fff;
+        padding: 30px;
+        border: 1px solid #dcdcdc;
+        border-radius: 8px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h2>Lovesac Quote Generator | Created by Subin Lebow</h2>
     <form method="POST" action="/generate-quote" enctype="multipart/form-data">
+      <label for="clientName">Name:</label>
+      <input type="text" id="clientName" name="client_name" required />
 
-        <label for="clientName">Name:</label>
-        <input type="text" id="clientName" name="client_name" required>
-
-        <label for="clientAddress">Address:</label>
-        <input type="text" id="clientAddress" name="client_address" required>
-    <div>
+      <label for="clientAddress">Address:</label>
+      <input type="text" id="clientAddress" name="client_address" required />
+      <div>
         <label for="imageUpload">Upload Image or Take a Photo:</label>
-        <input type="file" id="imageUpload" name="image" accept="image/*" capture="environment" required>
-    </div>
-        <input type="submit" value="Generate Quote">
+        <input
+          type="file"
+          id="imageUpload"
+          name="image"
+          accept="image/*"
+          capture="environment"
+          required
+        />
+      </div>
+      <input type="submit" value="Generate Quote" />
     </form>
-</body>
+  </body>
 </html>

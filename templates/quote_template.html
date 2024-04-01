@@ -1,157 +1,192 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sales Quote</title>
-<style>
-  body {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    font-family: 'Arial', sans-serif;
-    margin: 0;
-    padding: 0;
-    background: #f2f2f2;
-  }
-  .container {
-    width: calc(100% - 40px); /* Adjust width for padding */
-    max-width: 800px;
-    margin: 20px auto;
-    background: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    flex-grow: 1; /* Grow to fill the viewport height */
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between; /* Distribute space between header, content, and footer */
-  }
-  .header {
-    text-align: center;
-    margin-bottom: 20px;
-  }
-  .header h1 {
-    font-size: 40px;
-    color: #333;
-  }
-  .header2 {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-  .header p {
-    font-size: 20px;
-    color: #666;
-  }
-  .client-info, .quote-info, .footer p {
-    margin: 0;
-    font-size: 18px;
-    color: #666;
-  }
-  .quote-info {
-    text-align: right;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-  }
-  th {
-    text-align: left;
-    background-color: #f2f2f2;
-    color: #333;
-    padding: 10px 0;
-  }
-  td {
-    padding: 10px 0;
-    border-bottom: 1px solid #ddd;
-  }
-  .subtotal {
-    font-size: 18px;
-    text-align: right;
-    padding-top: 20px;
-  }
-  .total {
-    font-size: 24px;
-    font-weight: bold;
-    text-align: right;
-    padding-top: 20px;
-  }
-  footer {
-    text-align: center;
-    padding: 20px 0;
-    background-color: #f1f1f1;
-    border-top: 1px solid #eaeaea;
-    color: #666;
-  }
-  .footer p {
-    font-size: 14px;
-  }
-  
-  @media (max-width: 600px) {
-    .header2 {
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sales Quote</title>
+    <style>
+      body {
+        height: 100%;
+        display: flex;
         flex-direction: column;
-        align-items: flex-start;
-    }
-    .quote-info {
-        align-self: stretch;
+        font-family: "Arial", sans-serif;
+        margin: 0;
+        padding: 0;
+        background: #f2f2f2;
+      }
+      .container {
+        width: calc(100% - 40px);
+        max-width: 800px;
+        margin: 20px auto;
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .header-top {
+        flex: 0 0 auto;
+      }
+
+      .header-logo {
+        margin-right: 15px;
+        align-self: flex-start;
+      }
+
+      .header-text {
+        flex: 1 1 auto;
+        text-align: center;
+        margin-right: 175px;
+      }
+      .header h1,
+      .header p {
+        margin: 0;
+        color: #333;
+      }
+      .header2 {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .header p {
+        font-size: 20px;
+        color: #666;
+      }
+      .client-info,
+      .quote-info,
+      .footer p {
+        margin: 0;
+        font-size: 18px;
+        color: #666;
+      }
+      .quote-info {
+        text-align: right;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th {
         text-align: left;
-        margin-top: 10px;
-    }
-  }
-</style>
-</head>
-<body>
+        background-color: #f2f2f2;
+        color: #333;
+        padding: 10px 0;
+      }
+      td {
+        padding: 10px 0;
+        border-bottom: 1px solid #ddd;
+      }
+      .subtotal {
+        font-size: 18px;
+        text-align: right;
+        padding-top: 20px;
+      }
+      .total {
+        font-size: 24px;
+        font-weight: bold;
+        text-align: right;
+        padding-top: 20px;
+      }
+      footer {
+        text-align: center;
+        padding: 20px 0;
+        background-color: #f1f1f1;
+        border-top: 1px solid #eaeaea;
+        color: #666;
+      }
+      .footer p {
+        font-size: 14px;
+      }
 
-<div class="container">
-  <div class="header">
-    <p>Lovesac<br>Two Landmark Sq. Suite 300<br>Stamford, CT 06901</p>
-    <h1>Sales Quote</h1>
-    <p>QUOTE #{{ quote_id }}</p>
-  </div>
-    <div class="header2">
+      @media (max-width: 600px) {
+        .header-top {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .header-logo {
+          margin-bottom: 10px;
+        }
+        .header-text {
+          align-items: center;
+        }
+        .header2 {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .quote-info {
+          align-self: stretch;
+          text-align: left;
+          margin-top: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <div class="header-logo">
+          <img
+            src="{{ url_for('static', filename='lovesac-logo.jpg')}}"
+            alt="Lovesac Logo"
+            style="height: 40px"
+          />
+        </div>
+        <div class="header-text">
+          <p>Two Landmark Sq. Suite 300<br />Stamford, CT 06901</p>
+          <br />
+          <h1>Sales Quote</h1>
+          <br />
+          <p>QUOTE #{{ quote_id }}</p>
+        </div>
+        <div style="flex: 0 0 auto"></div>
+      </div>
+      <div class="header2">
         <div class="client-info">
-            {{client_name}}<br>
-            {{client_address}}
-          </div>
-        
-          <div class="quote-info">
-           Date: {{created_date}}
-          </div>
+          {{client_name}}<br />
+          {{client_address}}
+        </div>
+
+        <div class="quote-info">Date: {{created_date}}</div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ITEM</th>
+            <th>QTY</th>
+            <th>PRICE</th>
+            <th>TOTAL</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+          <tr>
+            <td>{{ item.name }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>${{ '%.2f' | format(item.price / item.quantity) }}</td>
+            <td>${{ '%.2f' | format(item.price) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="subtotal">Subtotal: ${{ '%.2f' | format(subtotal) }}</div>
+      <div class="total">Total: ${{ '%.2f' | format(total) }}</div>
     </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>ITEM</th>
-        <th>QTY</th>
-        <th>PRICE</th>
-        <th>TOTAL</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for item in items %}
-      <tr>
-        <td>{{ item.name }}</td>
-        <td>{{ item.quantity }}</td>
-        <td>${{ '%.2f' | format(item.price / item.quantity) }}</td>
-        <td>${{ '%.2f' | format(item.price) }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  <div class="subtotal">
-    Subtotal: ${{ '%.2f' | format(subtotal) }}
-  </div>
-  <div class="total">
-    Total: ${{ '%.2f' | format(total) }}
-  </div>
-</div>
-
-</body>
-<footer>
+  </body>
+  <footer>
     <p>© 2024 Subin Lebow. All rights reserved.</p>
-</footer>
+  </footer>
 </html>
