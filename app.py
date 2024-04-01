@@ -1,9 +1,9 @@
-from flask import Flask, request, jsonify, render_template, render_template_string
+from flask import Flask, request, jsonify, render_template
 from ultralytics import YOLO
 import uuid
 import os
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal, ROUND_HALF_UP
 
 app = Flask(__name__)
@@ -25,12 +25,15 @@ class_names = {
     7: 'wedge-seat',
 }
 
+def generate_quote_id(store_id):
+    current_date = datetime.now().strftime("%m%d%Y")
+    return f"{store_id}{current_date}"
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
 @app.route('/generate-quote', methods=['POST'])
-
 def generate_quote_endpoint():
     if 'image' not in request.files:
         return jsonify({'error': 'No image provided.'}), 400
@@ -51,6 +54,9 @@ def generate_quote_endpoint():
 
     results = model(image_path, save=True)
     detections = get_pandas(results)
+    
+    store_id_biltmore = "1283"
+    quote_id = generate_quote_id(store_id_biltmore)
 
     quote = generate_quote_from_detections(detections)
 
@@ -60,10 +66,10 @@ def generate_quote_endpoint():
     items = quote['items']
     subtotal = quote['subtotal']
     total = quote['total']
-    date = datetime.now()
+    created_date = datetime.now().strftime("%B %d, %Y")
 
     os.remove(image_path)
-    return render_template('quote_template.html', items=items, subtotal = subtotal, total = total, created_date = date.strftime("%B %d, %Y"), client_name=client_name, client_address=client_address)
+    return render_template('quote_template.html', items=items, subtotal = subtotal, total = total, created_date=created_date, client_name=client_name, client_address=client_address, quote_id=quote_id)
 
 def get_pandas(results):
 
@@ -102,7 +108,7 @@ def generate_quote_from_detections(detections):
     quote = {
         'items' : [],
         'subtotal' : Decimal('0'),
-        'total': Decimal('0')
+        'total': Decimal('0'),
     }
     for item, count in item_counts.items():
         item_total = count * price_list[item]
