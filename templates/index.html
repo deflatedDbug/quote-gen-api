@@ -19,16 +19,159 @@
         border: 1px solid #dcdcdc;
         border-radius: 8px;
       }
+      form > div {
+        margin-bottom: 15px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+      }
+
+      input[type="text"],
+      input[type="file"],
+      select {
+        max-width: 100%;
+        width: 35%;
+        padding: 8px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+
+      input[type="submit"] {
+        background-color: #4caf50;
+        color: white;
+        padding: 14px 20px;
+        margin: 8px 0;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      input[type="submit"]:hover {
+        background-color: #45a049;
+      }
     </style>
   </head>
   <body>
     <h2>Lovesac Quote Generator | Created by Subin Lebow</h2>
     <form method="POST" action="/generate-quote" enctype="multipart/form-data">
-      <label for="clientName">Name:</label>
-      <input type="text" id="clientName" name="client_name" required />
+      <div style="margin-bottom: 10px">
+        <label for="client_firstName">First Name:</label>
+        <input
+          type="text"
+          id="clientFirstName"
+          name="client_firstName"
+          required
+        />
+      </div>
 
-      <label for="clientAddress">Address:</label>
-      <input type="text" id="clientAddress" name="client_address" required />
+      <div style="margin-bottom: 20px">
+        <label for="client_lastName">Last Name:</label>
+        <input
+          type="text"
+          id="clientLastName"
+          name="client_lastName"
+          required
+        />
+      </div>
+
+      <div>
+        <label for="client_streetAddress">Address Line 1:</label>
+        <input
+          type="text"
+          id="clientStreetAddress"
+          name="client_streetAddress"
+          required
+        />
+      </div>
+
+      <div>
+        <label for="client_city">City:</label>
+        <input type="text" id="client_city" name="client_city" required />
+      </div>
+
+      <div>
+        <label for="client_state">State/Province:</label>
+        <select id="client_state" name="client_state" required>
+          <option value="">Select</option>
+          <option value="AL">Alabama</option>
+          <option value="AK">Alaska</option>
+          <option value="AZ">Arizona</option>
+          <option value="AR">Arkansas</option>
+          <option value="CA">California</option>
+          <option value="CO">Colorado</option>
+          <option value="CT">Connecticut</option>
+          <option value="DE">Delaware</option>
+          <option value="FL">Florida</option>
+          <option value="GA">Georgia</option>
+          <option value="HI">Hawaii</option>
+          <option value="ID">Idaho</option>
+          <option value="IL">Illinois</option>
+          <option value="IN">Indiana</option>
+          <option value="IA">Iowa</option>
+          <option value="KS">Kansas</option>
+          <option value="KY">Kentucky</option>
+          <option value="LA">Louisiana</option>
+          <option value="ME">Maine</option>
+          <option value="MD">Maryland</option>
+          <option value="MA">Massachusetts</option>
+          <option value="MI">Michigan</option>
+          <option value="MN">Minnesota</option>
+          <option value="MS">Mississippi</option>
+          <option value="MO">Missouri</option>
+          <option value="MT">Montana</option>
+          <option value="NE">Nebraska</option>
+          <option value="NV">Nevada</option>
+          <option value="NH">New Hampshire</option>
+          <option value="NJ">New Jersey</option>
+          <option value="NM">New Mexico</option>
+          <option value="NY">New York</option>
+          <option value="NC">North Carolina</option>
+          <option value="ND">North Dakota</option>
+          <option value="OH">Ohio</option>
+          <option value="OK">Oklahoma</option>
+          <option value="OR">Oregon</option>
+          <option value="PA">Pennsylvania</option>
+          <option value="RI">Rhode Island</option>
+          <option value="SC">South Carolina</option>
+          <option value="SD">South Dakota</option>
+          <option value="TN">Tennessee</option>
+          <option value="TX">Texas</option>
+          <option value="UT">Utah</option>
+          <option value="VT">Vermont</option>
+          <option value="VA">Virginia</option>
+          <option value="WA">Washington</option>
+          <option value="WV">West Virginia</option>
+          <option value="WI">Wisconsin</option>
+          <option value="WY">Wyoming</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="client_zip">Zip/Postal Code:</label>
+        <input type="text" id="client_zip" name="client_zip" required />
+      </div>
+
+      <div>
+        <label for="standard">Standard Fill</label>
+        <input
+          type="radio"
+          id="standard"
+          name="price_option"
+          value="standard"
+          checked
+        />
+
+        <label for="lovesoft">Lovesoft Fill</label>
+        <input
+          type="radio"
+          id="lovesoft"
+          name="price_option"
+          value="lovesoft"
+        />
+      </div>
       <div>
         <label for="imageUpload">Upload Image or Take a Photo:</label>
         <input

@@ -47,7 +47,7 @@
         flex: 1 1 auto;
         text-align: center;
         margin-right: 175px;
-        margin-bottom: 40px;
+        margin-bottom: 25px;
       }
 
       .header h1,
@@ -147,20 +147,20 @@
           />
         </div>
         <div class="header-text">
-          <p>Two Landmark Sq. Suite 300<br />Stamford, CT 06901</p>
+          <p style="margin-bottom: 20px;">Two Landmark Sq. Suite 300<br />Stamford, CT 06901</p>
           <br />
-          <br>
+          <br />
 
           <h1 style="font-size: 48px">Sales Quote</h1>
-          <br>
-          <p>QUOTE #{{ quote_id }}</p>
+          <br />
+          <p>QUOTE ID: {{ quote_id }}</p>
         </div>
         <div style="flex: 0 0 auto"></div>
       </div>
       <div class="header2">
         <div class="client-info">
-          {{client_name}}<br />
-          {{client_address}}
+          <p>{{client_firstName}} {{client_lastName}}</p>
+          <p>{{client_streetAddress}}, {{client_city}}, {{client_state}} {{client_zip}}</p>
         </div>
 
         <div class="quote-info">Date: {{created_date}}</div>
@@ -170,6 +170,7 @@
         <thead>
           <tr>
             <th>ITEM</th>
+            <th>FILL</th>
             <th>QTY</th>
             <th>PRICE</th>
             <th>TOTAL</th>
@@ -179,6 +180,10 @@
           {% for item in items %}
           <tr>
             <td>{{ item.name }}</td>
+            <td>
+              {% if item.name in ["standard-seat", "deep-seat", "wedge-seat"] %}
+              {{price_option}} {% else %} {% endif %}
+            </td>
             <td>{{ item.quantity }}</td>
             <td>${{ '%.2f' | format(item.price / item.quantity) }}</td>
             <td>${{ '%.2f' | format(item.price) }}</td>

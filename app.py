@@ -3,6 +3,8 @@ from ultralytics import YOLO
 import uuid
 import os
 import pandas as pd
+import random
+import string
 from datetime import datetime
 from decimal import Decimal, ROUND_HALF_UP
 
@@ -25,15 +27,45 @@ class_names = {
     7: 'wedge-seat',
 }
 
-def generate_quote_id(store_id):
-    current_date = datetime.now().strftime("%m%d%Y")
-    return f"{store_id}{current_date}"
+price_list_standard = {
+    "standard-side": Decimal('231'),
+    "deep-side": Decimal('231'),
+    "standard-seat": Decimal('535.50'),
+    "deep-seat": Decimal('535.50'),
+    "angled-side": Decimal('231'),
+    "angled-deep-side": Decimal('231'),
+    "rollarm-side": Decimal('231'),
+    "wedge-seat": Decimal('535.50'),
+}
+    
+price_list_lovesoft = {
+    "standard-side": Decimal('231'),
+    "deep-side": Decimal('231'),
+    "standard-seat": Decimal('675.00'),
+    "deep-seat": Decimal('675.00'),
+    "angled-side": Decimal('231'),
+    "angled-deep-side": Decimal('231'),
+    "rollarm-side": Decimal('231'),
+    "wedge-seat": Decimal('675.00'),
+}
+
+def get_states(country_code):
+    states = get_states_by_country_code(country_code)
+    return jsonify(states)
+
+def generate_quote_id():
+    timestamp = datetime.now().strftime("%f")[-2:]
+    
+    random_part = ''.join(random.choices(string.ascii_letters + string.digits, k=5))
+    
+    return timestamp + random_part
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
 @app.route('/generate-quote', methods=['POST'])
+
 def generate_quote_endpoint():
     if 'image' not in request.files:
         return jsonify({'error': 'No image provided.'}), 400
@@ -55,13 +87,16 @@ def generate_quote_endpoint():
     results = model(image_path, save=True)
     detections = get_pandas(results)
     
-    store_id_biltmore = "1283"
-    quote_id = generate_quote_id(store_id_biltmore)
+    quote_id = generate_quote_id()
 
     quote = generate_quote_from_detections(detections)
 
-    client_name = request.form.get('client_name')
-    client_address = request.form.get('client_address')
+    client_firstName = request.form.get('client_firstName')
+    client_lastName = request.form.get('client_lastName')
+    client_streetAddress = request.form.get('client_streetAddress')
+    client_city = request.form.get('client_city')
+    client_state = request.form.get('client_state')
+    client_zip = request.form.get('client_zip')
     
     items = quote['items']
     subtotal = quote['subtotal']
@@ -69,7 +104,7 @@ def generate_quote_endpoint():
     created_date = datetime.now().strftime("%B %d, %Y")
 
     os.remove(image_path)
-    return render_template('quote_template.html', items=items, subtotal = subtotal, total = total, created_date=created_date, client_name=client_name, client_address=client_address, quote_id=quote_id)
+    return render_template('quote_template.html', items=items, subtotal = subtotal, total = total, created_date=created_date, client_firstName=client_firstName, client_lastName=client_lastName, client_streetAddress=client_streetAddress, client_city=client_city, client_state = client_state, client_zip=client_zip, quote_id=quote_id, price_option=quote['price_option'])
 
 def get_pandas(results):
 
@@ -84,18 +119,14 @@ def get_pandas(results):
     return df
 
 def generate_quote_from_detections(detections):
-    price_list = {
-    "standard-side": Decimal('199'),
-    "deep-side": Decimal('199'),
-    "standard-seat": Decimal('450'),
-    "deep-seat": Decimal('450'),
-    "angled-side": Decimal('199'),
-    "angled-deep-side": Decimal('199'),
-    "rollarm-side": Decimal('199'),
-    "wedge-seat": Decimal('450'),
-    }
 
     item_counts = {}
+    price_option = request.form.get('price_option', 'standard')
+    
+    if price_option == 'lovesoft':
+        price_list = price_list_lovesoft
+    else: 
+        price_list = price_list_standard
 
     for index, row in detections.iterrows():
         label = row['class_name']
@@ -115,7 +146,8 @@ def generate_quote_from_detections(detections):
         quote['items'].append({'name': item, 'quantity': count, 'price': float(item_total)})
         quote['subtotal'] += item_total
         quote['total'] += item_total_with_tax
-
+    
+    quote['price_option'] = price_option
     quote['subtotal'] = float(quote['subtotal'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
     quote['total'] = float(quote['total'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
     return quote
