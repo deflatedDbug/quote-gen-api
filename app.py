@@ -98,19 +98,26 @@ def generate_quote_endpoint():
     client_zip = request.form.get('client_zip')
     
     subtotal = Decimal(quote['subtotal'])
+    
     if discount_percent > Decimal('0'): 
-        discount_multiplier = Decimal('1') - (discount_percent / Decimal('100'))
-        subtotal -= discount_multiplier
+        discount_value = (subtotal * discount_percent) / Decimal('100')
+        subtotal_after_discount = subtotal - discount_value
+    else:
+        discount_value = Decimal('0')
+        subtotal_after_discount = subtotal
     
     tax_rate = Decimal('1.07')
+    tax_amount = (subtotal_after_discount * (tax_rate - Decimal('1'))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
     items = quote['items']
-    total = subtotal * tax_rate
+    total = subtotal_after_discount + tax_amount
     created_date = datetime.now().strftime("%B %d, %Y")
     
-    formatted_subtotal = float(subtotal.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
-    formatted_total = float(total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
+    formatted_subtotal = subtotal.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    formatted_total = total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    formatted_discount = discount_value.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
     os.remove(image_path)
-    return render_template('quote_template.html', items=items, subtotal = formatted_subtotal, total = formatted_total, created_date=created_date, client_firstName=client_firstName, client_lastName=client_lastName, client_streetAddress=client_streetAddress, client_city=client_city, client_state = client_state, client_zip=client_zip, quote_id=quote_id, price_option=quote['price_option'])
+    
+    return render_template('quote_template.html', items=quote['items'], subtotal = formatted_subtotal, total = formatted_total, created_date=created_date, client_firstName=client_firstName, client_lastName=client_lastName, client_streetAddress=client_streetAddress, client_city=client_city, client_state = client_state, client_zip=client_zip, quote_id=quote_id, price_option=quote['price_option'], discount_value=formatted_discount, tax_amount=tax_amount)
 
 def get_pandas(results):
 
@@ -127,9 +134,9 @@ def get_pandas(results):
 def generate_quote_from_detections(detections):
 
     item_counts = {}
-    price_option = request.form.get('price_option', 'standard')
+    price_option = request.form.get('price_option', 'standard').capitalize()
     
-    if price_option == 'lovesoft':
+    if price_option == "lovesoft":
         price_list = price_list_lovesoft
     else: 
         price_list = price_list_standard
@@ -141,22 +148,29 @@ def generate_quote_from_detections(detections):
                 item_counts[label] = 0
             item_counts[label] += 1
     
-    quote = {
-        'items' : [],
-        'subtotal' : Decimal('0'),
-        'total': Decimal('0'),
-    }
+    quote_items = []
     for item, count in item_counts.items():
+        formatted_item = format_item_name(item)
         item_total = count * price_list[item]
-        item_total_with_tax = item_total * Decimal('1.07')
-        quote['items'].append({'name': item, 'quantity': count, 'price': float(item_total)})
-        quote['subtotal'] += item_total
-        quote['total'] += item_total_with_tax
+        item_total_tax = item_total * Decimal('1.07')
+        quote_items.append({'name': formatted_item, 'quantity': count, 'price': Decimal(item_total)})
     
-    quote['price_option'] = price_option
-    quote['subtotal'] = float(quote['subtotal'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
-    quote['total'] = float(quote['total'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
-    return quote
+    tax = item_total_tax
+    subtotal = sum(item['price'] for item in quote_items)
+    total = subtotal * Decimal('1.07')
+    
+    return {
+        'items': quote_items,
+        'subtotal': subtotal.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
+        'taxes':tax.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
+        'total': total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
+        'price_option': price_option
+    }
+
+def format_item_name(item_name):
+    parts = item_name.split('-')
+    formatted_parts = [part.capitalize() for part in parts]
+    return '-'.join(formatted_parts)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

@@ -94,6 +94,17 @@
         font-size: 18px;
         text-align: right;
         padding-top: 20px;
+        margin-top: 40px;
+      }
+      .discount {
+        font-size: 18px;
+        text-align: right;
+        padding-top: 20px;
+      }
+      .tax {
+        font-size: 18px;
+        text-align: right;
+        padding-top: 20px;
       }
       .total {
         font-size: 24px;
@@ -129,7 +140,7 @@
           align-items: flex-start;
         }
         .quote-info {
-          align-self: stretch;
+        align-self: stretch;
           text-align: left;
           margin-top: 10px;
         }
@@ -181,7 +192,7 @@
           <tr>
             <td>{{ item.name }}</td>
             <td>
-              {% if item.name in ["standard-seat", "deep-seat", "wedge-seat"] %}
+              {% if item.name in ["Standard-Seat", "Deep-Seat", "Wedge-Seat"] %}
               {{price_option}} {% else %} {% endif %}
             </td>
             <td>{{ item.quantity }}</td>
@@ -192,6 +203,8 @@
         </tbody>
       </table>
       <div class="subtotal">Subtotal: ${{ '%.2f' | format(subtotal) }}</div>
+      <div style="color: red;" class="discount">Discount: (${{ '%.2f' | format(discount_value) }})</div>
+      <div class="tax">Taxes: ${{ '%.2f' | format(tax_amount)}}</div>
       <div class="total">Total: ${{ '%.2f' | format(total) }}</div>
     </div>
   </body>
