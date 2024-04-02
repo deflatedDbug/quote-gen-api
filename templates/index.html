@@ -7,6 +7,7 @@
     <style>
       body {
         font-family: "Arial", sans-serif;
+        color: #56585a;
         background: #f7f7f7;
         padding: 20px;
         margin: 0;
@@ -40,6 +41,20 @@
         margin-bottom: 5px;
       }
 
+      .fill-options{
+        flex-direction: row;
+        justify-content: center;
+      }
+
+      .standard {
+        flex-direction: column;
+        margin-right: 25px;
+      }
+
+      .lovesoft {
+        flex-direction: column;
+      }
+
       input[type="text"],
       input[type="file"],
       select {
@@ -69,7 +84,7 @@
   </head>
   <body>
     <div class="container">
-    <h2>Lovesac Quote Generator | Created by Subin Lebow</h2>
+    <h2 style="color: black">Lovesac Quote Generator | Created by Subin Lebow</h2>
     <form method="POST" action="/generate-quote" enctype="multipart/form-data">
       <div style="margin-bottom: 10px">
         <label for="client_firstName">First Name:</label>
@@ -173,23 +188,27 @@
         <input type="text" id="client_zip" name="client_zip" required />
       </div>
 
-      <div>
-        <label for="Standard">Standard Fill</label>
-        <input
-          type="radio"
-          id="standard"
-          name="price_option"
-          value="standard"
-          checked
-        />
+      <div class="fill-options">
+        <div class="standard">
+          <label for="Standard">Standard</label>
+          <input
+            type="radio"
+            id="standard"
+            name="price_option"
+            value="standard"
+            checked
+          />
+        </div>
 
-        <label for="Lovesoft">Lovesoft Fill</label>
-        <input
-          type="radio"
-          id="lovesoft"
-          name="price_option"
-          value="lovesoft"
-        />
+        <div class="lovesoft">
+          <label for="Lovesoft">Lovesoft</label>
+          <input
+            type="radio"
+            id="lovesoft"
+            name="price_option"
+            value="lovesoft"
+          />
+        </div>
       </div>
 
       <div>
