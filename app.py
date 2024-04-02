@@ -6,7 +6,7 @@ import pandas as pd
 import random
 import string
 from datetime import datetime
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 
 app = Flask(__name__)
 
@@ -87,11 +87,16 @@ def generate_quote_endpoint():
     detections = get_pandas(results)
     
     quote_id = generate_quote_id()
-    discount_percent = Decimal(request.form.get('discount_percent', 0))
+    discount_percent_input = request.form.get('discount_percent') or '0'
+    try:
+        discount_percent = Decimal(discount_percent_input)
+    except InvalidOperation:
+        discount_percent = Decimal('0')
     quote = generate_quote_from_detections(detections)
 
     client_firstName = request.form.get('client_firstName')
     client_lastName = request.form.get('client_lastName')
+    clients_email = request.form.get('clients_email')
     client_streetAddress = request.form.get('client_streetAddress')
     client_city = request.form.get('client_city')
     client_state = request.form.get('client_state')
@@ -117,7 +122,7 @@ def generate_quote_endpoint():
     formatted_discount = discount_value.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
     os.remove(image_path)
     
-    return render_template('quote_template.html', items=quote['items'], subtotal = formatted_subtotal, total = formatted_total, created_date=created_date, client_firstName=client_firstName, client_lastName=client_lastName, client_streetAddress=client_streetAddress, client_city=client_city, client_state = client_state, client_zip=client_zip, quote_id=quote_id, price_option=quote['price_option'], discount_value=formatted_discount, tax_amount=tax_amount)
+    return render_template('quote_template.html', items=quote['items'], subtotal = formatted_subtotal, total = formatted_total, created_date=created_date, client_firstName=client_firstName, client_lastName=client_lastName, client_streetAddress=client_streetAddress, clients_email=clients_email, client_city=client_city, client_state = client_state, client_zip=client_zip, quote_id=quote_id, price_option=quote['price_option'], discount_value=formatted_discount, tax_amount=tax_amount)
 
 def get_pandas(results):
 

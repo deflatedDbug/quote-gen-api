@@ -18,9 +18,21 @@
         padding: 30px;
         border: 1px solid #dcdcdc;
         border-radius: 8px;
+        text-align: center;
       }
+
+      form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
       form > div {
         margin-bottom: 15px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
       }
 
       label {
@@ -37,6 +49,7 @@
         margin-bottom: 10px;
         border: 1px solid #ccc;
         border-radius: 4px;
+        margin: 0 auto;
       }
 
       input[type="submit"] {
@@ -55,6 +68,7 @@
     </style>
   </head>
   <body>
+    <div class="container">
     <h2>Lovesac Quote Generator | Created by Subin Lebow</h2>
     <form method="POST" action="/generate-quote" enctype="multipart/form-data">
       <div style="margin-bottom: 10px">
@@ -75,6 +89,11 @@
           name="client_lastName"
           required
         />
+      </div>
+
+      <div>
+        <label for="client_email">Email:</label>
+        <input type="text" id="clientEmail" name="clients_email" required />
       </div>
 
       <div>
@@ -191,5 +210,6 @@
       </div>
       <input type="submit" value="Generate Quote" />
     </form>
+  </div>
   </body>
 </html>
