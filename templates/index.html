@@ -53,6 +53,29 @@
         flex-direction: column;
       }
 
+      .fabric_option {
+        flex-direction: row;
+        justify-content: center;
+      }
+
+      .velvet {
+        flex-direction: column;
+        margin-right: 10px;
+      }
+
+      .chenille {
+        flex-direction: column;
+        width: 75px;
+      }
+
+      .chenille_label {
+        margin-left: 26px;
+      }
+
+      .chenille_btn {
+        margin-left: 38px;
+      }
+
       .discount-field {
         margin-bottom: 27px;
         margin-top: 5px;
@@ -87,7 +110,7 @@
   </head>
   <body>
     <div class="container">
-      <h2 style="color: black; padding-bottom: 25px;">
+      <h2 style="color: black; padding-bottom: 25px">
         Lovesac Quote Generator | Created by Subin Lebow
       </h2>
       <form
@@ -216,6 +239,31 @@
               name="price_option"
               value="lovesoft"
             />
+          </div>
+        </div>
+
+        <div class="fabric_option">
+          <div class="velvet">
+            <label for="velvet">Velvet</label>
+            <input
+              type="radio"
+              id="velvet"
+              name="fabric_type"
+              value="Velvet"
+              checked
+            />
+          </div>
+
+          <div class="chenille">
+            <label class="chenille_label" for="chenille">Chenille</label>
+            <div class="chenille_btn">
+              <input
+                type="radio"
+                id="chenille"
+                name="fabric_type"
+                value="Chenille"
+              />
+            </div>
           </div>
         </div>
 

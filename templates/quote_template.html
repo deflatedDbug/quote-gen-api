@@ -54,8 +54,8 @@
       }
       .header2 {
         display: flex;
+        flex-direction: row;
         justify-content: space-between;
-        align-items: center;
         margin-bottom: 20px;
       }
       .header p {
@@ -105,9 +105,7 @@
       }
       footer {
         text-align: center;
-        padding: 20px 0;
-        background-color: #f1f1f1;
-        border-top: 1px solid #eaeaea;
+
         color: #666;
         font-size: 14px;
       }
@@ -119,7 +117,6 @@
         margin-top: 40px;
         padding: 20px;
         background-color: #eaeaea;
-        border-radius: 5px;
         font-size: 16px;
         line-height: 1.5;
       }
@@ -153,6 +150,12 @@
           align-self: stretch;
           text-align: left;
           margin-top: 10px;
+        }
+      }
+
+      @media print {
+        .print-only {
+          display: none;
         }
       }
     </style>
@@ -190,7 +193,7 @@
           </p>
         </div>
 
-        <div class="quote-info">Date: {{created_date}}</div>
+        <div style="margin-top: 18px;" class="quote-info">Date: {{created_date}}</div>
       </div>
 
       <table style="margin-bottom: 80px">
@@ -218,17 +221,20 @@
           {% endfor %}
         </tbody>
       </table>
-      <div class="subtotal">Subtotal: ${{ '%.2f' | format(subtotal) }}</div>
-      {% if discount_value > 0 %}
-      <div style="color: red" class="discount">
-        Discount: (${{ '%.2f' | format(discount_value) }})
+      <div>
+        <div class="fabric">Fabric: Corded Velvet</div>
+        <div class="subtotal">Subtotal: ${{ '%.2f' | format(subtotal) }}</div>
+        {% if discount_value > 0 %}
+        <div style="color: red" class="discount">
+          Discount: (${{ '%.2f' | format(discount_value) }})
+        </div>
       </div>
       {% endif %}
       <div class="tax">Taxes: ${{ '%.2f' | format(tax_amount)}}</div>
       <div class="total">Total: ${{ '%.2f' | format(total) }}</div>
     </div>
 
-    <div class="Terms">
+    <!-- <div class="Terms">
       <h3>Terms and Conditions</h3>
       <p>
         Welcome to the Lovesac.com website! Accessing, browsing and/or utilizing
@@ -293,9 +299,9 @@
         receipt or order number is required for all warranty claims. Products
         used for commercial purposes are not covered under warranty.
       </p>
-    </div>
+    </div> -->
   </body>
-  <footer>
+  <footer class="print-only">
     <p>© 2024 Subin Lebow. All rights reserved.</p>
   </footer>
 </html>

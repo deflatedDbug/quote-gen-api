@@ -49,6 +49,28 @@ price_list_lovesoft = {
     "wedge-seat": Decimal('675.00'),
 }
 
+fabric_velvet = {
+    'Standard-Seat-Cover': Decimal('325'),
+        'Deep-Seat-Cover': Decimal('325'),
+        'Wedge-Seat-Cover': Decimal('325'),
+        'Angled-Side-Cover': Decimal('110'),
+        'Standard-Side-Cover': Decimal('110'),
+        'Deep-Side-Cover': Decimal('110'),
+        'Angled-Deep-Side-Cover': Decimal('110'),
+        'Rollarm-Side-Cover': Decimal('110')
+}
+
+fabric_chenille = {
+         'Standard-Seat-Cover': Decimal('275'),
+        'Deep-Seat-Cover': Decimal('275'),
+        'Wedge-Seat-Cover': Decimal('275'),
+        'Angled-Side-Cover': Decimal('95'),
+        'Standard-Side-Cover': Decimal('95'),
+        'Deep-Side-Cover': Decimal('95'),
+        'Angled-Deep-Side-Cover': Decimal('95'),
+        'Rollarm-Side-Cover': Decimal('95')    
+}
+
 
 
 def generate_quote_id():
@@ -92,6 +114,7 @@ def generate_quote_endpoint():
         discount_percent = Decimal(discount_percent_input)
     except InvalidOperation:
         discount_percent = Decimal('0')
+    
     quote = generate_quote_from_detections(detections)
 
     client_firstName = request.form.get('client_firstName')
@@ -113,7 +136,6 @@ def generate_quote_endpoint():
     
     tax_rate = Decimal('1.07')
     tax_amount = (subtotal_after_discount * (tax_rate - Decimal('1'))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    items = quote['items']
     total = subtotal_after_discount + tax_amount
     created_date = datetime.now().strftime("%B %d, %Y")
     
@@ -141,10 +163,19 @@ def generate_quote_from_detections(detections):
     item_counts = {}
     price_option = request.form.get('price_option', 'standard').capitalize()
     
+    base_price_list = price_list_lovesoft if price_option.lower() == "lovesoft" else price_list_standard
+    
     if price_option == "lovesoft":
         price_list = price_list_lovesoft
     else: 
         price_list = price_list_standard
+        
+    fabric_type = request.form.get('fabric_type', 'Velvet')
+    
+    if fabric_type == 'Velvet':
+        fabric_type = fabric_velvet
+    else: 
+        fabric_type = fabric_chenille
 
     for index, row in detections.iterrows():
         label = row['class_name']
@@ -156,7 +187,7 @@ def generate_quote_from_detections(detections):
     quote_items = []
     for item, count in item_counts.items():
         formatted_item = format_item_name(item)
-        item_total = count * price_list[item]
+        item_total = count * price_list[item] 
         item_total_tax = item_total * Decimal('1.07')
         quote_items.append({'name': formatted_item, 'quantity': count, 'price': Decimal(item_total)})
     
