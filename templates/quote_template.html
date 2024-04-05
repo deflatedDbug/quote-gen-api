@@ -18,7 +18,6 @@
         max-width: 800px;
         margin: 20px auto;
         background: #fff;
-        padding: 20px;
         flex-grow: 1;
         display: flex;
         flex-direction: column;
@@ -193,7 +192,9 @@
           </p>
         </div>
 
-        <div style="margin-top: 18px;" class="quote-info">Date: {{created_date}}</div>
+        <div style="margin-top: 18px" class="quote-info">
+          Date: {{created_date}}
+        </div>
       </div>
 
       <table style="margin-bottom: 80px">
@@ -211,7 +212,7 @@
           <tr>
             <td>{{ item.name }}</td>
             <td>
-              {% if item.name in ["Standard-Seat", "Deep-Seat", "Wedge-Seat"] %}
+              {% if item.name in ["Standard Seat", "Deep Seat", "Wedge Seat"] %}
               {{price_option}} {% else %} {% endif %}
             </td>
             <td>{{ item.quantity }}</td>
@@ -222,84 +223,20 @@
         </tbody>
       </table>
       <div>
-        <div class="fabric">Fabric: Corded Velvet</div>
+        <div class="fabric">Fabric: {{fabric_name}}</div>
+        {% if discount_value > 0 %}
+        <div class="discount_rate">Discount Rate: {{discount_rate}}%</div>
+        {% endif %}
         <div class="subtotal">Subtotal: ${{ '%.2f' | format(subtotal) }}</div>
         {% if discount_value > 0 %}
         <div style="color: red" class="discount">
           Discount: (${{ '%.2f' | format(discount_value) }})
         </div>
+        {% endif %}
+        <div class="tax">Taxes: ${{ '%.2f' | format(tax_amount)}}</div>
+        <div class="total">Total: ${{ '%.2f' | format(total) }}</div>
       </div>
-      {% endif %}
-      <div class="tax">Taxes: ${{ '%.2f' | format(tax_amount)}}</div>
-      <div class="total">Total: ${{ '%.2f' | format(total) }}</div>
     </div>
-
-    <!-- <div class="Terms">
-      <h3>Terms and Conditions</h3>
-      <p>
-        Welcome to the Lovesac.com website! Accessing, browsing and/or utilizing
-        Lovesac.com (the "site") indicates your agreement to the Terms and
-        Conditions contained in this agreement - Please read them carefully!
-        Lovesac reserves the right to change and update this website
-        (Lovesac.com) and the Terms and Conditions contained herein at any time
-        without written notice.
-      </p>
-
-      <h4>Shipping</h4>
-      <p>
-        Shipping We offer 100% free shipping on all orders within the contiguous
-        United States. Orders deliver in approximately 1-4 weeks (some
-        restrictions may apply). Custom covers may take between 4-10 weeks for
-        delivery. Sacs, Sactionals pieces and covers may be fulfilled and
-        shipped from different warehouses and may be received at different
-        times. Due to the restrictions of our shipping partners, we are unable
-        to deliver to P.O. boxes / APO or FPO addresses. Please note, we are
-        working closely with our delivery partners, to take all the necessary
-        steps to protect customers during the COVID-19 pandemic. These measures
-        include contactless delivery by leaving packages at your doorstep
-        without requiring a signature.
-      </p>
-      <h4>Returns & 60-Day Home Trial</h4>
-      <p>
-        We believe in Total Comfort, and a big part of that is making sure you
-        are completely satisfied with your purchase. But if you'd like to make a
-        return for any reason, you can return it by contacting Customer Love to
-        coordinate your return authorization. Eligible merchandise may be
-        returned within 60 days from the date you received it for a full refund
-        or exchange. Custom merchandise, floor model, and clearance item sales
-        are final, and returns cannot be issued. Any shipping and/or delivery
-        fees are non-refundable. Gift Card purchases cannot be cancelled or
-        returned. Merchandise is eligible for a one-time price adjustment within
-        14 days of the date ordered. Floor models and clearance merchandise are
-        not eligible for price adjustment. Financing terms cannot be adjusted
-        after a purchase is made. Proof of purchase is required for all returns,
-        exchanges, warranties, and refunds.
-      </p>
-      <h4>Warranties</h4>
-      <p>
-        Warranties Sac Inserts have a Lifetime Guarantee against manufacturer
-        defects. The warranty policy does not apply to failures stemming from
-        use, abuse, or excessive wear. Original receipt or order number is
-        required for all warranty claims. Products used for commercial purposes
-        are not covered under warranty. All hard Sactionals pieces such as
-        frames, springs, clamps, feet, and shoes have a lifetime warranty.
-        Standard Sactional inserts (Khaki or Grey upholstered Seat and Side
-        Frames) and Outdoor Sactional inserts are guaranteed for three (3) years
-        against manufacturer defects. Made-to-Order Down and Lovesoft™ Down
-        Alternative Sactional Inserts are guaranteed for three (3) years against
-        manufacturer defects. Warranty policy does not apply to failures
-        stemming from use, abuse, or excessive wear. Original receipt or order
-        number is required for all warranty claims. Products used for commercial
-        purposes are not covered under warranty. Sac and Sactionals covers are
-        guaranteed for 3 years from the date of purchase (we highly recommend
-        that all Outdoor Sactionals Back Pillows and Outdoor Sactionals Seat
-        Cushions be kept out of the elements when not in use). Products are
-        guaranteed against all manufacturing defects. Warranty policy does not
-        apply to failures stemming from use, abuse, or excessive wear. Original
-        receipt or order number is required for all warranty claims. Products
-        used for commercial purposes are not covered under warranty.
-      </p>
-    </div> -->
   </body>
   <footer class="print-only">
     <p>© 2024 Subin Lebow. All rights reserved.</p>

@@ -27,6 +27,17 @@ class_names = {
     7: 'wedge-seat',
 }
 
+cover_mapping = {
+    'standard-seat': 'Standard-Seat-Cover',
+    'deep-seat': 'Deep-Seat-Cover',
+    'standard-side': 'Standard-Side-Cover',
+    'deep-side': 'Deep-Side-Cover',
+    'angled-side': 'Angled-Side-Cover',
+    'angled-deep-side': 'Angled-Deep-Side-Cover',
+    'rollarm-side': 'Rollarm-Side-Cover',
+    'wedge-seat': 'Wedge-Seat-Cover'
+}
+
 price_list_standard = {
     "standard-side": Decimal('231'),
     "deep-side": Decimal('231'),
@@ -71,15 +82,12 @@ fabric_chenille = {
         'Rollarm-Side-Cover': Decimal('95')    
 }
 
-
-
 def generate_quote_id():
     timestamp = datetime.now().strftime("%f")[-2:]
     
     random_part = ''.join(random.choices(string.ascii_letters + string.digits, k=5))
     
     return timestamp + random_part
-
 
 @app.route('/')
 def index():
@@ -109,11 +117,6 @@ def generate_quote_endpoint():
     detections = get_pandas(results)
     
     quote_id = generate_quote_id()
-    discount_percent_input = request.form.get('discount_percent') or '0'
-    try:
-        discount_percent = Decimal(discount_percent_input)
-    except InvalidOperation:
-        discount_percent = Decimal('0')
     
     quote = generate_quote_from_detections(detections)
 
@@ -124,27 +127,23 @@ def generate_quote_endpoint():
     client_city = request.form.get('client_city')
     client_state = request.form.get('client_state')
     client_zip = request.form.get('client_zip')
-    
-    subtotal = Decimal(quote['subtotal'])
-    
-    if discount_percent > Decimal('0'): 
-        discount_value = (subtotal * discount_percent) / Decimal('100')
-        subtotal_after_discount = subtotal - discount_value
-    else:
-        discount_value = Decimal('0')
-        subtotal_after_discount = subtotal
-    
-    tax_rate = Decimal('1.07')
-    tax_amount = (subtotal_after_discount * (tax_rate - Decimal('1'))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    total = subtotal_after_discount + tax_amount
+        
+    formatted_subtotal = quote['subtotal'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    formatted_total = quote['total'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    formatted_discount = quote['discount'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    formatted_tax = quote['taxes'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    fabric_type =quote['fabric_type']
+    discount_rate = quote['discount_percent']
     created_date = datetime.now().strftime("%B %d, %Y")
     
-    formatted_subtotal = subtotal.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    formatted_total = total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    formatted_discount = discount_value.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    if fabric_type == "Velvet":
+        display_fabric_name = "Corded Velvet"
+    else:
+        display_fabric_name = fabric_type
+
     os.remove(image_path)
     
-    return render_template('quote_template.html', items=quote['items'], subtotal = formatted_subtotal, total = formatted_total, created_date=created_date, client_firstName=client_firstName, client_lastName=client_lastName, client_streetAddress=client_streetAddress, clients_email=clients_email, client_city=client_city, client_state = client_state, client_zip=client_zip, quote_id=quote_id, price_option=quote['price_option'], discount_value=formatted_discount, tax_amount=tax_amount)
+    return render_template('quote_template.html', items=quote['items'], subtotal=formatted_subtotal , fabric_name=display_fabric_name, total = formatted_total, created_date=created_date, client_firstName=client_firstName, client_lastName=client_lastName, client_streetAddress=client_streetAddress, clients_email=clients_email, client_city=client_city, client_state = client_state, client_zip=client_zip, quote_id=quote_id, price_option=quote['price_option'], discount_rate=discount_rate, discount_value=formatted_discount, tax_amount=formatted_tax)
 
 def get_pandas(results):
 
@@ -161,52 +160,65 @@ def get_pandas(results):
 def generate_quote_from_detections(detections):
 
     item_counts = {}
+    cover_counts = {}
+    
+    fabric_type = request.form.get('fabric_type', 'Velvet')
     price_option = request.form.get('price_option', 'standard').capitalize()
     
-    base_price_list = price_list_lovesoft if price_option.lower() == "lovesoft" else price_list_standard
-    
-    if price_option == "lovesoft":
+    if price_option == "Lovesoft":
         price_list = price_list_lovesoft
     else: 
         price_list = price_list_standard
-        
-    fabric_type = request.form.get('fabric_type', 'Velvet')
     
-    if fabric_type == 'Velvet':
-        fabric_type = fabric_velvet
-    else: 
-        fabric_type = fabric_chenille
-
-    for index, row in detections.iterrows():
+    fabric_pricing_dict = fabric_velvet if fabric_type == 'Velvet' else fabric_chenille
+    
+    for _, row in detections.iterrows():
         label = row['class_name']
+        
         if label in price_list:
-            if label not in item_counts:
-                item_counts[label] = 0
-            item_counts[label] += 1
+            item_counts[label] = item_counts.get(label, 0) + 1
+            cover_label = cover_mapping[label]
+            cover_counts[cover_label] = cover_counts.get(cover_label, 0) + 1
     
     quote_items = []
+    
     for item, count in item_counts.items():
         formatted_item = format_item_name(item)
         item_total = count * price_list[item] 
-        item_total_tax = item_total * Decimal('1.07')
         quote_items.append({'name': formatted_item, 'quantity': count, 'price': Decimal(item_total)})
     
-    tax = item_total_tax
-    subtotal = sum(item['price'] for item in quote_items)
-    total = subtotal * Decimal('1.07')
+    for cover, count in cover_counts.items():
+        formatted_cover = format_item_name(cover)
+        cover_total = count * fabric_pricing_dict[cover]
+        quote_items.append({'name': formatted_cover, 'quantity': count, 'price': Decimal(cover_total)})
     
+    subtotal = sum(item['price'] for item in quote_items)
+    discount_percent_input = request.form.get('discount_percent') or '0'
+    try: 
+        discount_percent = Decimal(discount_percent_input)
+    except InvalidOperation:
+        discount_percent = Decimal ('0')
+    discount_value = (subtotal * discount_percent) / Decimal('100') if discount_percent > Decimal('0') else Decimal('0')
+    subtotal_after_discount = subtotal - discount_value
+    tax_rate = Decimal('1.07')
+    tax_amount = (subtotal_after_discount * (tax_rate - Decimal('1'))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    total = subtotal_after_discount + tax_amount
+     
     return {
         'items': quote_items,
-        'subtotal': subtotal.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
-        'taxes':tax.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
+        'subtotal': subtotal_after_discount.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
+        'discount_percent': discount_percent,
+        'discount': discount_value.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
+        'taxes':tax_amount.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
         'total': total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
-        'price_option': price_option
+        'price_option': price_option,
+        'fabric_type': fabric_type
     }
 
 def format_item_name(item_name):
     parts = item_name.split('-')
     formatted_parts = [part.capitalize() for part in parts]
-    return '-'.join(formatted_parts)
+    return ' '.join(formatted_parts)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
