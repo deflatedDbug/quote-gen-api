@@ -132,6 +132,12 @@ def generate_quote_endpoint():
     formatted_total = quote['total'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
     formatted_discount = quote['discount'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
     formatted_tax = quote['taxes'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    
+    comma_separated_discount = "{:,.2f}".format(formatted_discount)
+    comma_separated_subtotal = "{:,.2f}".format(formatted_subtotal)
+    comma_separated_total = "{:,.2f}".format(formatted_total)
+    comma_separated_tax = "{:,.2f}".format(formatted_tax)
+    
     fabric_type =quote['fabric_type']
     discount_rate = quote['discount_percent']
     created_date = datetime.now().strftime("%B %d, %Y")
@@ -143,7 +149,7 @@ def generate_quote_endpoint():
 
     os.remove(image_path)
     
-    return render_template('quote_template.html', items=quote['items'], subtotal=formatted_subtotal , fabric_name=display_fabric_name, total = formatted_total, created_date=created_date, client_firstName=client_firstName, client_lastName=client_lastName, client_streetAddress=client_streetAddress, clients_email=clients_email, client_city=client_city, client_state = client_state, client_zip=client_zip, quote_id=quote_id, price_option=quote['price_option'], discount_rate=discount_rate, discount_value=formatted_discount, tax_amount=formatted_tax)
+    return render_template('quote_template.html', items=quote['items'], comma_separated_discount=comma_separated_discount, comma_separated_subtotal=comma_separated_subtotal, comma_separated_tax=comma_separated_tax, comma_separated_total=comma_separated_total, subtotal=formatted_subtotal , fabric_name=display_fabric_name, total = formatted_total, created_date=created_date, client_firstName=client_firstName, client_lastName=client_lastName, client_streetAddress=client_streetAddress, clients_email=clients_email, client_city=client_city, client_state = client_state, client_zip=client_zip, quote_id=quote_id, price_option=quote['price_option'], discount_rate=discount_rate, discount_value=formatted_discount, tax_amount=formatted_tax)
 
 def get_pandas(results):
 
@@ -206,7 +212,7 @@ def generate_quote_from_detections(detections):
      
     return {
         'items': quote_items,
-        'subtotal': subtotal.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
+        'subtotal': subtotal_after_discount.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
         'discount_percent': discount_percent,
         'discount': discount_value.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
         'taxes':tax_amount.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),

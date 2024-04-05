@@ -251,14 +251,14 @@
           {% endif %}
         </div>
         <div class="right-section">
-          <div class="subtotal">Subtotal: ${{ '%.2f' | format(subtotal) }}</div>
+          <div class="subtotal">Subtotal: ${{comma_separated_subtotal}}</div>
           {% if discount_value > 0 %}
           <div style="color: red" class="discount">
-            Discount: (${{ '%.2f' | format(discount_value) }})
+            Discount: (${{comma_separated_discount}})
           </div>
           {% endif %}
-          <div class="tax">Taxes: ${{ '%.2f' | format(tax_amount)}}</div>
-          <div class="total">Total: ${{ '%.2f' | format(total) }}</div>
+          <div class="tax">Taxes: ${{comma_separated_tax}}</div>
+          <div class="total">Total: ${{comma_separated_total}}</div>
         </div>
       </div>
     </div>
