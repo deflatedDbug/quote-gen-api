@@ -206,7 +206,7 @@ def generate_quote_from_detections(detections):
      
     return {
         'items': quote_items,
-        'subtotal': subtotal_after_discount.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
+        'subtotal': subtotal.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
         'discount_percent': discount_percent,
         'discount': discount_value.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
         'taxes':tax_amount.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
