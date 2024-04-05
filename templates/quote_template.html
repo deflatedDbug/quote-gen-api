@@ -83,15 +83,37 @@
         padding: 10px 0;
       }
       td {
-        padding: 10px 0;
-        border-bottom: 1px solid #ddd;
+        padding: 20px 0;
+        border-bottom: 2px solid #ddd;
       }
 
+      .sactional-info {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+      }
+
+      .left-section,
+      .right-section {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .left-section {
+        align-items: flex-start; /* Align items to the left */
+      }
+
+      .right-section {
+        align-items: flex-end; /* Align items to the right */
+      }
+
+      .fabric,
+      .discount_rate,
       .subtotal,
       .discount,
-      .tax {
+      .tax,
+      .total {
         font-size: 18px;
-        text-align: right;
         padding-top: 5px;
         margin-top: 15px;
       }
@@ -99,9 +121,8 @@
       .total {
         font-size: 24px;
         font-weight: bold;
-        text-align: right;
-        padding-top: 20px;
       }
+
       footer {
         text-align: center;
 
@@ -222,19 +243,23 @@
           {% endfor %}
         </tbody>
       </table>
-      <div>
-        <div class="fabric">Fabric: {{fabric_name}}</div>
-        {% if discount_value > 0 %}
-        <div class="discount_rate">Discount Rate: {{discount_rate}}%</div>
-        {% endif %}
-        <div class="subtotal">Subtotal: ${{ '%.2f' | format(subtotal) }}</div>
-        {% if discount_value > 0 %}
-        <div style="color: red" class="discount">
-          Discount: (${{ '%.2f' | format(discount_value) }})
+      <div class="sactional-info">
+        <div class="left-section">
+          <div class="fabric">Fabric: {{fabric_name}}</div>
+          {% if discount_value > 0 %}
+          <div class="discount_rate">Discount Rate: {{discount_rate}}%</div>
+          {% endif %}
         </div>
-        {% endif %}
-        <div class="tax">Taxes: ${{ '%.2f' | format(tax_amount)}}</div>
-        <div class="total">Total: ${{ '%.2f' | format(total) }}</div>
+        <div class="right-section">
+          <div class="subtotal">Subtotal: ${{ '%.2f' | format(subtotal) }}</div>
+          {% if discount_value > 0 %}
+          <div style="color: red" class="discount">
+            Discount: (${{ '%.2f' | format(discount_value) }})
+          </div>
+          {% endif %}
+          <div class="tax">Taxes: ${{ '%.2f' | format(tax_amount)}}</div>
+          <div class="total">Total: ${{ '%.2f' | format(total) }}</div>
+        </div>
       </div>
     </div>
   </body>
