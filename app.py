@@ -39,47 +39,47 @@ cover_mapping = {
 }
 
 price_list_standard = {
-    "standard-side": Decimal('231'),
-    "deep-side": Decimal('231'),
-    "standard-seat": Decimal('535.50'),
-    "deep-seat": Decimal('535.50'),
-    "angled-side": Decimal('231'),
-    "angled-deep-side": Decimal('231'),
-    "rollarm-side": Decimal('231'),
-    "wedge-seat": Decimal('535.50'),
+    "standard-side": Decimal('225'),
+    "deep-side": Decimal('225'),
+    "standard-seat": Decimal('450'),
+    "deep-seat": Decimal('450'),
+    "angled-side": Decimal('225'),
+    "angled-deep-side": Decimal('225'),
+    "rollarm-side": Decimal('225'),
+    "wedge-seat": Decimal('450'),
 }
     
 price_list_lovesoft = {
-    "standard-side": Decimal('231'),
-    "deep-side": Decimal('231'),
-    "standard-seat": Decimal('675.00'),
-    "deep-seat": Decimal('675.00'),
-    "angled-side": Decimal('231'),
-    "angled-deep-side": Decimal('231'),
-    "rollarm-side": Decimal('231'),
-    "wedge-seat": Decimal('675.00'),
+    "standard-side": Decimal('225'),
+    "deep-side": Decimal('225'),
+    "standard-seat": Decimal('650'),
+    "deep-seat": Decimal('650'),
+    "angled-side": Decimal('225'),
+    "angled-deep-side": Decimal('225'),
+    "rollarm-side": Decimal('225'),
+    "wedge-seat": Decimal('650'),
 }
 
 fabric_velvet = {
-    'Standard-Seat-Cover': Decimal('325'),
-        'Deep-Seat-Cover': Decimal('325'),
-        'Wedge-Seat-Cover': Decimal('325'),
-        'Angled-Side-Cover': Decimal('110'),
-        'Standard-Side-Cover': Decimal('110'),
-        'Deep-Side-Cover': Decimal('110'),
-        'Angled-Deep-Side-Cover': Decimal('110'),
-        'Rollarm-Side-Cover': Decimal('110')
+    'Standard-Seat-Cover': Decimal('315'),
+        'Deep-Seat-Cover': Decimal('315'),
+        'Wedge-Seat-Cover': Decimal('315'),
+        'Angled-Side-Cover': Decimal('105'),
+        'Standard-Side-Cover': Decimal('105'),
+        'Deep-Side-Cover': Decimal('105'),
+        'Angled-Deep-Side-Cover': Decimal('105'),
+        'Rollarm-Side-Cover': Decimal('105')
 }
 
 fabric_chenille = {
-         'Standard-Seat-Cover': Decimal('275'),
-        'Deep-Seat-Cover': Decimal('275'),
-        'Wedge-Seat-Cover': Decimal('275'),
-        'Angled-Side-Cover': Decimal('95'),
-        'Standard-Side-Cover': Decimal('95'),
-        'Deep-Side-Cover': Decimal('95'),
-        'Angled-Deep-Side-Cover': Decimal('95'),
-        'Rollarm-Side-Cover': Decimal('95')    
+         'Standard-Seat-Cover': Decimal('270'),
+        'Deep-Seat-Cover': Decimal('270'),
+        'Wedge-Seat-Cover': Decimal('270'),
+        'Angled-Side-Cover': Decimal('90'),
+        'Standard-Side-Cover': Decimal('90'),
+        'Deep-Side-Cover': Decimal('90'),
+        'Angled-Deep-Side-Cover': Decimal('90'),
+        'Rollarm-Side-Cover': Decimal('90')    
 }
 
 def generate_quote_id():
@@ -224,6 +224,9 @@ def generate_quote_from_detections(detections):
 def format_item_name(item_name):
     parts = item_name.split('-')
     formatted_parts = [part.capitalize() for part in parts]
+    
+    if formatted_parts[-1] == "Seat":
+        formatted_parts.append("Insert")
     return ' '.join(formatted_parts)
 
 if __name__ == '__main__':

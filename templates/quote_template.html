@@ -43,11 +43,6 @@
         flex: 0 0 auto;
       }
 
-      /* .header-logo {
-        margin-right: 15px;
-        align-self: flex-start;
-      } */
-
       .header h1,
       .header p {
         margin: 0;
@@ -95,6 +90,7 @@
       .sactional-info {
         display: flex;
         justify-content: space-between;
+        align-items: center;
         width: 100%;
       }
 
@@ -102,6 +98,7 @@
       .right-section {
         display: flex;
         flex-direction: column;
+        justify-content: start;
       }
 
       .left-section {
@@ -200,7 +197,6 @@
         <thead>
           <tr>
             <th>ITEM</th>
-            <th>FILL</th>
             <th>QTY</th>
             <th>PRICE PER</th>
             <th>TOTAL</th>
@@ -210,10 +206,6 @@
           {% for item in items %}
           <tr>
             <td>{{ item.name }}</td>
-            <td>
-              {% if item.name in ["Standard Seat", "Deep Seat", "Wedge Seat"] %}
-              {{price_option}} {% else %} {% endif %}
-            </td>
             <td>{{ item.quantity }}</td>
             <td>${{ '%.2f' | format(item.price / item.quantity) }}</td>
             <td>${{ '%.2f' | format(item.price) }}</td>
@@ -223,6 +215,7 @@
       </table>
       <div class="sactional-info">
         <div class="left-section">
+          <div class="fill">Fill: {{price_option}}</div>
           <div class="fabric">Fabric: {{fabric_name}}</div>
           {% if discount_value > 0 %}
           <div class="discount_rate">Discount Rate: {{discount_rate}}%</div>
