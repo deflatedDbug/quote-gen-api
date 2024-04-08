@@ -57,17 +57,18 @@
         display: flex;
         flex-direction: row;
         justify-content: space-between;
-        margin-bottom: 10px;
+        margin-bottom: 5px;
       }
       .header p {
         font-size: 16px;
         color: #666;
       }
+
       .client-info,
       .quote-info,
       .footer p {
         margin: 0;
-        font-size: 16px;
+        font-size: 15px;
         color: #666;
       }
       .quote-info {
@@ -83,10 +84,12 @@
         background-color: #f2f2f2;
         color: #333;
         padding: 10px 0;
+        font-size: 15 px;
       }
       td {
         padding: 10px 0;
         border-bottom: 2px solid #ddd;
+        font-size: 14px;
       }
 
       .sactional-info {
@@ -115,12 +118,12 @@
       .discount,
       .tax,
       .total {
-        font-size: 18px;
+        font-size: 16px;
         margin-top: 8px;
       }
 
       .total {
-        font-size: 20px;
+        font-size: 18px;
         font-weight: bold;
       }
 
@@ -173,7 +176,7 @@
             alt="Lovesac Logo"
             style="height: 40px; align-self: flex-start"
           />
-          <h1 style="font-size: 32px">Sales Quote</h1>
+          <h1 style="font-size: 32px; margin-top: 30px;">Sales Quote</h1>
           <p s class="print-only">QUOTE ID: {{ quote_id }}</p>
         </div>
       </div>
@@ -199,7 +202,7 @@
             <th>ITEM</th>
             <th>FILL</th>
             <th>QTY</th>
-            <th>PRICE</th>
+            <th>PRICE PER</th>
             <th>TOTAL</th>
           </tr>
         </thead>
@@ -232,7 +235,7 @@
             Discount: (${{comma_separated_discount}})
           </div>
           {% endif %}
-          <div class="tax">Taxes: ${{comma_separated_tax}}</div>
+          <div class="tax">Tax: ${{comma_separated_tax}}</div>
           <div class="total">Total: ${{comma_separated_total}}</div>
         </div>
       </div>
