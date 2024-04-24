@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect, url_for
 from ultralytics import YOLO
 import uuid
 import os
@@ -82,74 +82,20 @@ fabric_chenille = {
         'Rollarm-Side-Cover': Decimal('90')    
 }
 
-def generate_quote_id():
-    timestamp = datetime.now().strftime("%f")[-2:]
-    
-    random_part = ''.join(random.choices(string.ascii_letters + string.digits, k=5))
-    
-    return timestamp + random_part
-
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/generate-quote', methods=['POST'])
-
-def generate_quote_endpoint():
-    if 'image' not in request.files:
-        return jsonify({'error': 'No image provided.'}), 400
-    
-    image_file = request.files['image']
-    
-    if image_file.filename == '':
-        return 'No Image selected', 400
-    
-    unique_filename = str(uuid.uuid4()) + ".jpg"
-
-    dir_path = r"C:\Users\Subin Lebow\Desktop\quote-gen-api\uploaded_images"
-
-    os.makedirs(dir_path, exist_ok=True)
-    image_path = os.path.join(dir_path, unique_filename)
-    image = request.files['image']
-    image.save(image_path)
-
-    results = model(image_path, save=True)
-    detections = get_pandas(results)
-    
-    quote_id = generate_quote_id()
-    
-    quote = generate_quote_from_detections(detections)
-
-    client_firstName = request.form.get('client_firstName')
-    client_lastName = request.form.get('client_lastName')
-    clients_email = request.form.get('clients_email')
-    client_streetAddress = request.form.get('client_streetAddress')
-    client_city = request.form.get('client_city')
-    client_state = request.form.get('client_state')
-    client_zip = request.form.get('client_zip')
-        
-    formatted_subtotal = quote['subtotal'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    formatted_total = quote['total'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    formatted_discount = quote['discount'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    formatted_tax = quote['taxes'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    
-    comma_separated_discount = "{:,.2f}".format(formatted_discount)
-    comma_separated_subtotal = "{:,.2f}".format(formatted_subtotal)
-    comma_separated_total = "{:,.2f}".format(formatted_total)
-    comma_separated_tax = "{:,.2f}".format(formatted_tax)
-    
-    fabric_type =quote['fabric_type']
-    discount_rate = quote['discount_percent']
-    created_date = datetime.now().strftime("%B %d, %Y")
-    
-    if fabric_type == "Velvet":
-        display_fabric_name = "Corded Velvet"
-    else:
-        display_fabric_name = fabric_type
-
-    os.remove(image_path)
-    
-    return render_template('quote_template.html', items=quote['items'], comma_separated_discount=comma_separated_discount, comma_separated_subtotal=comma_separated_subtotal, comma_separated_tax=comma_separated_tax, comma_separated_total=comma_separated_total, subtotal=formatted_subtotal , fabric_name=display_fabric_name, total = formatted_total, created_date=created_date, client_firstName=client_firstName, client_lastName=client_lastName, client_streetAddress=client_streetAddress, clients_email=clients_email, client_city=client_city, client_state = client_state, client_zip=client_zip, quote_id=quote_id, price_option=quote['price_option'], discount_rate=discount_rate, discount_value=formatted_discount, tax_amount=formatted_tax)
+detections_store = {}
+fabric_type_global = None
+price_option_global = None
+discount_global = Decimal('0')
+quote_id_global = None
+client_firstName_global = None
+client_lastName_global = None
+clients_email_global = None
+client_streetAddress_global = None
+client_city_global = None
+client_state_global = None
+client_zip_global = None
+discount_rate_global = Decimal('0')
+date_global = None
 
 def get_pandas(results):
 
@@ -163,13 +109,29 @@ def get_pandas(results):
 
     return df
 
-def generate_quote_from_detections(detections):
-
+def generate_quote_from_detections(detections, quote_id):
     item_counts = {}
     cover_counts = {}
+    global client_firstName_global
+    global client_lastName_global
+    global clients_email_global
+    global client_streetAddress_global
+    global client_city_global
+    global client_state_global
+    global client_zip_global
+    global discount_global
+    global fabric_type_global
+    
+    if isinstance(detections, list):
+        detections = pd.DataFrame(detections)
+        print("Converted DataFrame:", detections)
     
     fabric_type = request.form.get('fabric_type', 'Velvet')
     price_option = request.form.get('price_option', 'standard').capitalize()
+    
+    fabric_type_global = fabric_type
+    price_option_global = price_option
+    quote_id_global = quote_id
     
     if price_option == "Lovesoft":
         price_list = price_list_lovesoft
@@ -198,28 +160,56 @@ def generate_quote_from_detections(detections):
         cover_total = count * fabric_pricing_dict[cover]
         quote_items.append({'name': formatted_cover, 'quantity': count, 'price': Decimal(cover_total)})
     
-    subtotal = sum(item['price'] for item in quote_items)
+    subtotal = sum(Decimal(item['price']) for item in quote_items)
     discount_percent_input = request.form.get('discount_percent') or '0'
+    discount_global = discount_percent_input
     try: 
         discount_percent = Decimal(discount_percent_input)
     except InvalidOperation:
         discount_percent = Decimal ('0')
+        
+    client_firstName_global = request.form['client_firstName']
+    client_lastName_global = request.form['client_lastName']
+    clients_email_global = request.form['clients_email']
+    client_streetAddress_global = request.form.get('client_streetAddress', '')
+    client_city_global = request.form.get('client_city', '')
+    client_state_global = request.form.get('client_state', '')
+    client_zip_global = request.form.get('client_zip', '')
+        
     discount_value = (subtotal * discount_percent) / Decimal('100') if discount_percent > Decimal('0') else Decimal('0')
-    subtotal_after_discount = subtotal - discount_value
     tax_rate = Decimal('1.07')
-    tax_amount = (subtotal_after_discount * (tax_rate - Decimal('1'))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    total = subtotal_after_discount + tax_amount
-     
+    tax_amount = (subtotal * (tax_rate - Decimal('1'))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    total = subtotal + tax_amount - discount_value
+    
     return {
         'items': quote_items,
-        'subtotal': subtotal_after_discount.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
+        'subtotal': subtotal.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
         'discount_percent': discount_percent,
         'discount': discount_value.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
         'taxes':tax_amount.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
         'total': total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
         'price_option': price_option,
-        'fabric_type': fabric_type
+        'fabric_type': fabric_type,
+        'quote_id': quote_id,
+        'fabric_type_global': fabric_type_global,
+        'price_option_global': price_option_global,
+        'quote_id_global': quote_id_global,
+        'discount_global': discount_global,
+        'client_firstName_global': client_firstName_global,
+        'client_lastName_global': client_lastName_global,
+        'clients_email_global': clients_email_global,
+        'client_streetAddress_global': client_streetAddress_global,
+        'client_city_global': client_city_global,
+        'client_state_global': client_state_global,
+        'client_zip_global': client_zip_global
     }
+    
+def generate_quote_id():
+    timestamp = datetime.now().strftime("%f")[-2:]
+    
+    random_part = ''.join(random.choices(string.ascii_letters + string.digits, k=5))
+    
+    return timestamp + random_part
 
 def format_item_name(item_name):
     parts = item_name.split('-')
@@ -228,6 +218,151 @@ def format_item_name(item_name):
     if formatted_parts[-1] == "Seat":
         formatted_parts.append("Insert")
     return ' '.join(formatted_parts)
+
+def add_to_detections_store(quote_id, item):
+    if quote_id not in detections_store:
+        detections_store[quote_id] = []
+    detections_store[quote_id].append(item)
+    
+def standardize_decimal(value, precision='0.01'):
+    return Decimal(value).quantize(Decimal(precision), rounding=ROUND_HALF_UP)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/generate-quote', methods=['POST'])
+
+def generate_quote_endpoint():
+    if 'image' not in request.files:
+        return jsonify({'error': 'No image provided.'}), 400
+    
+    image_file = request.files['image']
+    
+    if image_file.filename == '':
+        return 'No Image selected', 400
+    
+    unique_filename = str(uuid.uuid4()) + ".jpg"
+    raw_images_dir = r"C:\Users\Subin Lebow\Desktop\Lovesac-Stuff\quote-gen-api\raw_images" 
+    raw_images_path = os.path.join(raw_images_dir, unique_filename) 
+    image_file.save(raw_images_path)
+
+    results = model(raw_images_path, save=False)
+    detections = get_pandas(results)
+    global detections_store
+    quote_id = generate_quote_id()
+    quote = generate_quote_from_detections(detections, quote_id)
+    detections_store[quote_id] = quote
+    return redirect(url_for('display_quote', quote_id=quote_id))
+
+@app.route('/quote/<quote_id>')
+def display_quote(quote_id):
+    global quote_id_global
+    quote_id_global = quote_id
+    date = datetime.now()
+    formatted_date = date.strftime('%m/%d/%Y')
+    quote = detections_store.get(quote_id_global)
+    
+    print("display_quote_route:", quote)
+    if not quote:
+        return jsonify({'error': 'Quote not found'}), 404
+    
+    return render_template('quote_template.html', **quote, formatted_date=formatted_date)
+    
+@app.route('/update-quote/<quote_id_global>', methods=['POST'])
+
+def generate_quote_from_update(quote_id_global):
+    updated_quantities = {}
+    for key in request.form:
+        if key.startswith('quantity_'):
+            item_name = key.split('quantity_')[1].replace('_', ' ')
+            updated_quantities[item_name] = int(request.form[key])
+            
+    if quote_id_global not in detections_store:
+        raise ValueError("Quote ID not found")
+    
+    items = detections_store[quote_id_global]['items']
+    for item in items:
+        if item['name'] in updated_quantities:
+            new_quantity = updated_quantities[item['name']]
+            unit_price = Decimal(item['price']) / item['quantity']
+            item['quantity'] = new_quantity
+            item['price'] = standardize_decimal(unit_price * new_quantity)
+    
+    print("Content of items:", items)
+    subtotal = sum(Decimal(item['price']) for item in items)
+    discount_percent_input = discount_global
+    print("discount_percent_input percentage:", discount_percent_input)
+    try: 
+        discount_percent_input = Decimal(discount_percent_input)
+    except InvalidOperation:
+        discount_percent_input = Decimal ('0')
+        
+    discount_value = (subtotal * discount_percent_input) / Decimal('100') if discount_percent_input > Decimal('0') else Decimal('0')
+    print("Update quote discount_value_global:", discount_value)
+    print("update quote discount value from return value:", discount_global)
+    
+    date = datetime.now()
+    formatted_date = date.strftime('%m/%d/%Y')
+    
+    tax_rate = Decimal('1.07')
+    tax_amount = (subtotal * (tax_rate - Decimal('1'))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    total = subtotal + tax_amount - discount_value
+    detections_store[quote_id_global] = {
+        'items': items,
+        'subtotal': subtotal.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
+        'total': total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
+        'discount_percent': discount_percent_input,
+        'discount': discount_value.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
+        'taxes': tax_amount.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
+        'quote_id': quote_id_global
+        
+    }
+    print("Return type for update quote:", detections_store[quote_id_global])
+    updated_quote = detections_store[quote_id_global]
+    return render_template('quote_template.html', 
+                           items=updated_quote['items'],
+                           quote_id=quote_id_global,
+                           subtotal=updated_quote['subtotal'],
+                           total=updated_quote['total'],
+                           discount=updated_quote['discount'],
+                           taxes=updated_quote['taxes'],
+                           price_option=updated_quote.get('price_option', 'Standard'),
+                           fabric_type_global= fabric_type_global,
+                           discount_percent=updated_quote.get('discount_percent', 0),
+                           client_firstName_global=client_firstName_global,
+                           client_lastName_global=client_lastName_global,
+                           clients_email_global=clients_email_global,
+                           client_streetAddress_global=client_streetAddress_global,
+                           client_city_global=client_city_global,
+                           client_state_global=client_state_global,
+                           client_zip_global=client_zip_global,
+                           formatted_date=formatted_date )    
+
+@app.route('/delete-item', methods=['POST'])
+def delete_item():
+    global detections_store
+    global quote_id_global
+    data = request.json
+    itemName = data['itemName']
+    quote_id = quote_id_global
+    
+    normalized_item_name = itemName.replace('_', ' ').title()
+    
+    print("Received item to delete:", normalized_item_name)
+    print("Items before deletion:", detections_store.get(quote_id, []))
+    
+    if quote_id in detections_store:
+        detections_store[quote_id] = [item for item in detections_store[quote_id] if item['name'] != normalized_item_name]
+    print("Items after deletion:", detections_store.get(quote_id, []))
+    return redirect(url_for('view_quote', quote_id=quote_id))
+
+@app.route('/view-quote')
+def view_quote(quote_id):
+    if quote_id not in detections_store:
+        return jsonify({'error': 'Quote not found'}), 404
+    quote = detections_store[quote_id]
+    return render_template('quote_template.html', items=quote)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

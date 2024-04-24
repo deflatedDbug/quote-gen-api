@@ -58,8 +58,13 @@
         font-size: 16px;
         color: #666;
       }
+      
+      .client-info {
+        margin-left: 20px;
+        font-size: 15px;
+        color: #666;
+      }
 
-      .client-info,
       .quote-info,
       .footer p {
         margin: 0;
@@ -68,6 +73,7 @@
       }
       .quote-info {
         text-align: right;
+        margin-right: 20px;
       }
       table {
         width: 100%;
@@ -103,10 +109,12 @@
 
       .left-section {
         align-items: flex-start; /* Align items to the left */
+        margin-left: 20px;
       }
 
       .right-section {
         align-items: flex-end; /* Align items to the right */
+        margin-right: 20px;
       }
 
       .fabric,
@@ -173,66 +181,106 @@
             alt="Lovesac Logo"
             style="height: 40px; align-self: flex-start"
           />
-          <h1 style="font-size: 32px; margin-top: 30px;">Sales Quote</h1>
+          <h1 style="font-size: 32px; margin-top: 30px">Sales Quote</h1>
           <p s class="print-only">QUOTE ID: {{ quote_id }}</p>
         </div>
       </div>
       <div class="header2">
         <div class="client-info">
-          <p>{{client_firstName}} {{client_lastName}}</p>
-          <p>{{clients_email}}</p>
+          <p>{{client_firstName_global}} {{client_lastName_global}}</p>
+          <p>{{clients_email_global}}</p>
           <p>
-            {% if client_streetAddress and client_city and client_state and
-            client_zip %} {{client_streetAddress}}, {{client_city}},
-            {{client_state}} {{client_zip}} {% endif %}
+            {% if client_streetAddress_global and client_city_global and client_state_global and
+            client_zip_global %} {{client_streetAddress_global}}, {{client_city_global}},
+            {{client_state_global}} {{client_zip_global}} {% endif %}
           </p>
         </div>
-
         <div style="margin-top: 16px" class="quote-info">
-          Date: {{created_date}}
+          Date: {{formatted_date}}
         </div>
       </div>
+      <div class="container">
+        <form method="post" action="{{ url_for('generate_quote_from_update', quote_id_global=quote_id) }}">
+          <input type="hidden" name="quote_id" value="{{quote_id}}">
+          <table id="itemsTable" style="margin-bottom: 40px">
+            <thead>
+              <tr>
+                <th>ITEM</th>
+                <th>QTY</th>
+                <th>PRICE PER</th>
+                <th>TOTAL</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in items %}
+              <tr>
+                <td>{{ item.name }}</td>
+                <td>
+                  <input
+                    type="number"
+                    name="quantity_{{ item.name }}"
+                    value="{{item.quantity}}"
+                    min="0"
+                    style="width: 50px"
+                  />
+                </td>
+                <td>${{ '%.2f' | format(item.price / item.quantity) }}</td>
+                <td>${{ '%.2f' | format(item.price) }}</td>
+                <td>
+                  <button type="button" onclick="deleteItem('{{item.name}}')">Delete</button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
 
-      <table style="margin-bottom: 40px">
-        <thead>
-          <tr>
-            <th>ITEM</th>
-            <th>QTY</th>
-            <th>PRICE PER</th>
-            <th>TOTAL</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for item in items %}
-          <tr>
-            <td>{{ item.name }}</td>
-            <td>{{ item.quantity }}</td>
-            <td>${{ '%.2f' | format(item.price / item.quantity) }}</td>
-            <td>${{ '%.2f' | format(item.price) }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+          <button
+            type="submit"
+            style="padding: 8px 16px; font-size: 16px; cursor: pointer"
+          >
+            Recalculate
+          </button>
+        </form>
+      </div>
+
       <div class="sactional-info">
         <div class="left-section">
           <div class="fill">Fill: {{price_option}}</div>
-          <div class="fabric">Fabric: {{fabric_name}}</div>
-          {% if discount_value > 0 %}
-          <div class="discount_rate">Discount Rate: {{discount_rate}}%</div>
+          <div class="fabric">Fabric: {{fabric_type_global}}</div>
+          {% if discount and discount > 0 %}
+          <div class="discount_rate">Discount Rate: {{discount_percent}}%</div>
           {% endif %}
         </div>
         <div class="right-section">
-          <div class="subtotal">Subtotal: ${{comma_separated_subtotal}}</div>
-          {% if discount_value > 0 %}
+          <div class="subtotal">Subtotal: ${{subtotal}}</div>
+          {% if discount and discount > 0 %}
           <div style="color: red" class="discount">
-            Discount: (${{comma_separated_discount}})
+            Discount: (${{discount}})
           </div>
           {% endif %}
-          <div class="tax">Tax: ${{comma_separated_tax}}</div>
-          <div class="total">Total: ${{comma_separated_total}}</div>
+          <div class="tax">Tax: ${{taxes}}</div>
+          <div class="total">Total: ${{total}}</div>
         </div>
       </div>
     </div>
+  <script>
+    function deleteItem(itemName) {
+      fetch('/delete-item',{
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({itemName: itemName.replace(/ /g, '_')})
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log(data.message);
+        location.reload();
+      })
+      .catch(error => console.error('Error:', error))
+    }
+  </script>
   </body>
   <footer class="print-only">
     <p>© 2024 Subin Lebow. All rights reserved.</p>
