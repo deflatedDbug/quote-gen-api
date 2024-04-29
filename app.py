@@ -285,25 +285,30 @@ def display_quote(quote_id):
 @app.route('/update-quote/<quote_id_global>', methods=['POST'])
 
 def generate_quote_from_update(quote_id_global):
+    global detections_store
+    if quote_id_global not in detections_store:
+        raise ValueError('Quote ID not found')
+    
+    quote = detections_store[quote_id_global]
     updated_quantities = {}
+    
+    print("Incoming form data:", request.form)
     for key in request.form:
         if key.startswith('quantity_'):
             item_name = key.split('quantity_')[1].replace('_', ' ')
             updated_quantities[item_name] = int(request.form[key])
             
-    if quote_id_global not in detections_store:
-        raise ValueError("Quote ID not found")
-    
-    items = detections_store[quote_id_global]['items']
-    for item in items:
+    print('updated_quantities:', updated_quantities)
+    for item in quote['items']:
         if item['name'] in updated_quantities:
             new_quantity = updated_quantities[item['name']]
-            unit_price = Decimal(item['price']) / item['quantity']
-            item['quantity'] = new_quantity
-            item['price'] = standardize_decimal(unit_price * new_quantity)
+            if item['quantity'] != new_quantity:
+                unit_price = Decimal(item['price']) / item['quantity']
+                item['quantity'] = new_quantity
+                item['price'] = standardize_decimal(unit_price * new_quantity)
     
-    print("Content of items:", items)
-    subtotal = sum(Decimal(item['price']) for item in items)
+ 
+    subtotal = sum(Decimal(item['price']) for item in quote['items'])
     discount_percent_input = discount_global
     print("discount_percent_input percentage:", discount_percent_input)
     try: 
@@ -316,50 +321,27 @@ def generate_quote_from_update(quote_id_global):
     print("update quote discount value from return value:", discount_global)
     
     subtotal_after_discount = Decimal(subtotal - discount_value)
-    date = datetime.now()
-    formatted_date = date.strftime('%m/%d/%Y')
     
     tax_rate = Decimal('1.07')
     tax_amount = (subtotal_after_discount * (tax_rate - Decimal('1'))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
     total = subtotal_after_discount + tax_amount
-    detections_store[quote_id_global] = {
-        'items': items,
+    quote.update({
         'subtotal': subtotal.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
         'total': total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
         'discount_percent': discount_percent_input,
         'discount': discount_value.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
         'taxes': tax_amount.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
-        'quote_id': quote_id_global
+        'items': quote['items']
         
-    }
-    print("Return type for update quote:", detections_store[quote_id_global])
-    updated_quote = detections_store[quote_id_global]
-    return render_template('quote_template.html', 
-                           items=updated_quote['items'],
-                           quote_id=quote_id_global,
-                           subtotal=updated_quote['subtotal'],
-                           total=updated_quote['total'],
-                           discount=updated_quote['discount'],
-                           taxes=updated_quote['taxes'],
-                           price_option=price_option_global,
-                           fabric_type_global= fabric_type_global,
-                           discount_percent=updated_quote.get('discount_percent', 0),
-                           client_firstName_global=client_firstName_global,
-                           client_lastName_global=client_lastName_global,
-                           clients_email_global=clients_email_global,
-                           client_phone_number_global=client_phone_number_global,
-                           client_streetAddress_global=client_streetAddress_global,
-                           client_city_global=client_city_global,
-                           client_state_global=client_state_global,
-                           client_zip_global=client_zip_global,
-                           formatted_date=formatted_date )    
+    })
+    return render_template('quote_template.html', **quote, formatted_date=datetime.now().strftime('%m/%d/%Y'))    
 
 @app.route('/delete-item', methods=['POST'])
 def delete_item():
     global detections_store
     global quote_id_global
     data = request.json
-    itemName = data['itemName']
+    itemName = data.get('itemName')
     quote_id = quote_id_global
     
     normalized_item_name = itemName.replace('_', ' ').title()
@@ -367,11 +349,19 @@ def delete_item():
     print("Received item to delete:", normalized_item_name)
     print("Items before deletion:", detections_store.get(quote_id, []))
     
-    if quote_id in detections_store:
-        detections_store[quote_id] = [item for item in detections_store[quote_id] if item['name'] != normalized_item_name]
-    print("Items after deletion:", detections_store.get(quote_id, []))
-    return redirect(url_for('view_quote', quote_id=quote_id))
-
+    if quote_id in detections_store and 'items' in detections_store[quote_id]:
+        items_list = detections_store[quote_id]['items']
+        new_items = [item for item in items_list if item.get('name') != normalized_item_name]
+        detections_store[quote_id]['items'] = new_items
+        
+        try: 
+            generate_quote_from_update(quote_id)
+            return jsonify({"message": "Item deleted successfully", "quote": detections_store[quote_id]}), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+    else:
+        return jsonify({"error": "Quote not found"}), 404
+    
 @app.route('/view-quote')
 def view_quote(quote_id):
     if quote_id not in detections_store:

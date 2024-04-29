@@ -208,7 +208,7 @@
         </div>
       </div>
       <div class="container">
-        <form method="post" action="{{ url_for('generate_quote_from_update', quote_id_global=quote_id) }}">
+        <form method="POST" action="/update-quote/{{ quote_id_global }}">
           <input type="hidden" name="quote_id" value="{{quote_id}}">
           <table id="itemsTable" style="margin-bottom: 40px">
             <thead>
