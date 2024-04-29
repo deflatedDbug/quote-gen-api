@@ -90,6 +90,7 @@ quote_id_global = None
 client_firstName_global = None
 client_lastName_global = None
 clients_email_global = None
+client_phone_number_global = None
 client_streetAddress_global = None
 client_city_global = None
 client_state_global = None
@@ -109,18 +110,26 @@ def get_pandas(results):
 
     return df
 
+def format_phone_number(phone_number):
+    if len(phone_number) == 10 and phone_number.isdigit():
+        return f"{phone_number[:3]}-{phone_number[3:6]}-{phone_number[6:]}"
+    else:
+        raise ValueError("Invalid phone number. Ensure it has exactly 10 digits.")
+
 def generate_quote_from_detections(detections, quote_id):
     item_counts = {}
     cover_counts = {}
     global client_firstName_global
     global client_lastName_global
     global clients_email_global
+    global client_phone_number_global
     global client_streetAddress_global
     global client_city_global
     global client_state_global
     global client_zip_global
     global discount_global
     global fabric_type_global
+    global price_option_global
     
     if isinstance(detections, list):
         detections = pd.DataFrame(detections)
@@ -168,18 +177,21 @@ def generate_quote_from_detections(detections, quote_id):
     except InvalidOperation:
         discount_percent = Decimal ('0')
         
-    client_firstName_global = request.form['client_firstName']
-    client_lastName_global = request.form['client_lastName']
-    clients_email_global = request.form['clients_email']
+    client_firstName_global = request.form.get('client_firstName')
+    client_lastName_global = request.form.get('client_lastName')
+    clients_email_global = request.form.get('clients_email')
+    raw_phone_number = request.form.get('client_phone_number')
+    client_phone_number_global = format_phone_number(raw_phone_number)
     client_streetAddress_global = request.form.get('client_streetAddress', '')
     client_city_global = request.form.get('client_city', '')
     client_state_global = request.form.get('client_state', '')
     client_zip_global = request.form.get('client_zip', '')
-        
+
     discount_value = (subtotal * discount_percent) / Decimal('100') if discount_percent > Decimal('0') else Decimal('0')
+    subtotal_after_discount = Decimal(subtotal - discount_value)
     tax_rate = Decimal('1.07')
-    tax_amount = (subtotal * (tax_rate - Decimal('1'))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    total = subtotal + tax_amount - discount_value
+    tax_amount = (subtotal_after_discount * (tax_rate - Decimal('1'))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    total = subtotal_after_discount + tax_amount
     
     return {
         'items': quote_items,
@@ -198,6 +210,7 @@ def generate_quote_from_detections(detections, quote_id):
         'client_firstName_global': client_firstName_global,
         'client_lastName_global': client_lastName_global,
         'clients_email_global': clients_email_global,
+        'client_phone_number_global': client_phone_number_global,
         'client_streetAddress_global': client_streetAddress_global,
         'client_city_global': client_city_global,
         'client_state_global': client_state_global,
@@ -302,12 +315,13 @@ def generate_quote_from_update(quote_id_global):
     print("Update quote discount_value_global:", discount_value)
     print("update quote discount value from return value:", discount_global)
     
+    subtotal_after_discount = Decimal(subtotal - discount_value)
     date = datetime.now()
     formatted_date = date.strftime('%m/%d/%Y')
     
     tax_rate = Decimal('1.07')
-    tax_amount = (subtotal * (tax_rate - Decimal('1'))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    total = subtotal + tax_amount - discount_value
+    tax_amount = (subtotal_after_discount * (tax_rate - Decimal('1'))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    total = subtotal_after_discount + tax_amount
     detections_store[quote_id_global] = {
         'items': items,
         'subtotal': subtotal.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
@@ -327,12 +341,13 @@ def generate_quote_from_update(quote_id_global):
                            total=updated_quote['total'],
                            discount=updated_quote['discount'],
                            taxes=updated_quote['taxes'],
-                           price_option=updated_quote.get('price_option', 'Standard'),
+                           price_option=price_option_global,
                            fabric_type_global= fabric_type_global,
                            discount_percent=updated_quote.get('discount_percent', 0),
                            client_firstName_global=client_firstName_global,
                            client_lastName_global=client_lastName_global,
                            clients_email_global=clients_email_global,
+                           client_phone_number_global=client_phone_number_global,
                            client_streetAddress_global=client_streetAddress_global,
                            client_city_global=client_city_global,
                            client_state_global=client_state_global,

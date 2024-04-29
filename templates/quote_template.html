@@ -166,6 +166,13 @@
       }
 
       @media print {
+        input[type="number"] {
+          border: none;
+          background: transparent;
+          pointer-events: none;
+          color: black
+        }
+
         .print-only {
           display: none;
         }
@@ -189,6 +196,7 @@
         <div class="client-info">
           <p>{{client_firstName_global}} {{client_lastName_global}}</p>
           <p>{{clients_email_global}}</p>
+          <p>{{client_phone_number_global}}</p>
           <p>
             {% if client_streetAddress_global and client_city_global and client_state_global and
             client_zip_global %} {{client_streetAddress_global}}, {{client_city_global}},
@@ -228,7 +236,7 @@
                 <td>${{ '%.2f' | format(item.price / item.quantity) }}</td>
                 <td>${{ '%.2f' | format(item.price) }}</td>
                 <td>
-                  <button type="button" onclick="deleteItem('{{item.name}}')">Delete</button>
+                  <button type="button" class="no-print" onclick="deleteItem('{{item.name}}')">Delete</button>
                 </td>
               </tr>
               {% endfor %}
@@ -238,6 +246,7 @@
           <button
             type="submit"
             style="padding: 8px 16px; font-size: 16px; cursor: pointer"
+            class="no-print"
           >
             Recalculate
           </button>
