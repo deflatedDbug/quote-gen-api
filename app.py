@@ -286,6 +286,7 @@ def display_quote(quote_id):
 
 def generate_quote_from_update(quote_id_global):
     global detections_store
+    global discount_global
     if quote_id_global not in detections_store:
         raise ValueError('Quote ID not found')
     
@@ -306,33 +307,31 @@ def generate_quote_from_update(quote_id_global):
                 unit_price = Decimal(item['price']) / item['quantity']
                 item['quantity'] = new_quantity
                 item['price'] = standardize_decimal(unit_price * new_quantity)
+                
+    if not quote['items']:
+        subtotal = Decimal('0')
+        discount_percent_input = Decimal('0')
+        discount_global = discount_percent_input
+        discount_value = Decimal('0')
+        tax_amount = Decimal('0')
+        total = Decimal('0')
     
- 
-    subtotal = sum(Decimal(item['price']) for item in quote['items'])
-    discount_percent_input = discount_global
-    print("discount_percent_input percentage:", discount_percent_input)
-    try: 
-        discount_percent_input = Decimal(discount_percent_input)
-    except InvalidOperation:
-        discount_percent_input = Decimal ('0')
+    else:
+        subtotal = sum(Decimal(item['price']) for item in quote['items'])
+        discount_percent_input = Decimal(discount_global).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        discount_value = (subtotal * discount_percent_input / Decimal('100')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        tax_rate = Decimal('1.07')
+        tax_amount = ((subtotal - discount_value) * (tax_rate - Decimal('1'))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        total = (subtotal -discount_value + tax_amount).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         
-    discount_value = (subtotal * discount_percent_input) / Decimal('100') if discount_percent_input > Decimal('0') else Decimal('0')
-    print("Update quote discount_value_global:", discount_value)
-    print("update quote discount value from return value:", discount_global)
     
-    subtotal_after_discount = Decimal(subtotal - discount_value)
-    
-    tax_rate = Decimal('1.07')
-    tax_amount = (subtotal_after_discount * (tax_rate - Decimal('1'))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    total = subtotal_after_discount + tax_amount
     quote.update({
-        'subtotal': subtotal.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
-        'total': total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
+        'subtotal': subtotal,
+        'total': total,
         'discount_percent': discount_percent_input,
-        'discount': discount_value.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
-        'taxes': tax_amount.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
+        'discount': discount_value,
+        'taxes': tax_amount,
         'items': quote['items']
-        
     })
     return render_template('quote_template.html', **quote, formatted_date=datetime.now().strftime('%m/%d/%Y'))    
 
@@ -361,13 +360,50 @@ def delete_item():
             return jsonify({"error": str(e)}), 500
     else:
         return jsonify({"error": "Quote not found"}), 404
-    
-@app.route('/view-quote')
-def view_quote(quote_id):
+
+@app.route('/add-item/<quote_id>', methods=['POST'])
+def add_item(quote_id):
+    global detections_store
     if quote_id not in detections_store:
         return jsonify({'error': 'Quote not found'}), 404
-    quote = detections_store[quote_id]
-    return render_template('quote_template.html', items=quote)
+    
+    data = request.json
+    item_type = data.get('itemType')
+    item_details = data.get('itemName')
+    quantity = int(data.get('quantity', 1))
+    
+    
+    if item_type == "insert":
+        price = price_list_lovesoft[item_details] if price_option_global == "Lovesoft" else price_list_standard[item_details]
+    else:
+        price = fabric_velvet[item_details] if fabric_type_global == "Velvet" else fabric_chenille[item_details]
+    
+    new_item = {'name' : item_details, 'quantity': quantity, 'price': Decimal(price) * quantity}
+    existing_items = detections_store[quote_id].get('items', [])
+    
+    for item in existing_items:
+        if item['name'] == new_item['name']:
+            item['quantity'] += new_item['quantity']
+            item['price'] += new_item['price']
+            break
+    
+    else:
+        existing_items.append(new_item)
+        
+    detections_store[quote_id]['items'] = existing_items
+    return jsonify({"message": "Item added successfully", "items": existing_items})
+@app.route('/get-data') 
+def get_data():
+    data = {
+        "class_names": {
+            0: 'standard-seat',
+            1: 'deep-seat',
+        },
+        "cover_mapping": {
+            'standard-seat': 'Standard-Seat_Cover',
+        },
+    }
+    return jsonify(data)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

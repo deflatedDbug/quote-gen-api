@@ -58,7 +58,7 @@
         font-size: 16px;
         color: #666;
       }
-      
+
       .client-info {
         margin-left: 20px;
         font-size: 15px;
@@ -110,11 +110,13 @@
       .left-section {
         align-items: flex-start; /* Align items to the left */
         margin-left: 20px;
+        flex: 1;
       }
 
       .right-section {
         align-items: flex-end; /* Align items to the right */
         margin-right: 20px;
+        flex: 1;
       }
 
       .fabric,
@@ -140,6 +142,51 @@
       }
       .footer p {
         font-size: 14px;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgb(0, 0, 0);
+        background-color: rgba(0, 0, 0, 0.4);
+      }
+
+      .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 30%;
+        height: 240px;
+      }
+
+      .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+      }
+
+      .close:hover,
+      .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .button-fixed-width {
+        width: 109px;
+        padding: 8px 16px;
+        font-size: 14px;
+        cursor: pointer;
+        margin-top: 20px;
+        text-align: center;
       }
 
       @media (max-width: 600px) {
@@ -170,7 +217,7 @@
           border: none;
           background: transparent;
           pointer-events: none;
-          color: black
+          color: black;
         }
 
         .print-only {
@@ -198,18 +245,19 @@
           <p>{{clients_email_global}}</p>
           <p>{{client_phone_number_global}}</p>
           <p>
-            {% if client_streetAddress_global and client_city_global and client_state_global and
-            client_zip_global %} {{client_streetAddress_global}}, {{client_city_global}},
+            {% if client_streetAddress_global and client_city_global and
+            client_state_global and client_zip_global %}
+            {{client_streetAddress_global}}, {{client_city_global}},
             {{client_state_global}} {{client_zip_global}} {% endif %}
           </p>
         </div>
-        <div style="margin-top: 16px" class="quote-info">
+        <div style="margin-top: 15px" class="quote-info">
           Date: {{formatted_date}}
         </div>
       </div>
       <div class="container">
         <form method="POST" action="/update-quote/{{ quote_id_global }}">
-          <input type="hidden" name="quote_id" value="{{quote_id}}">
+          <input type="hidden" name="quote_id" value="{{quote_id}}" />
           <table id="itemsTable" style="margin-bottom: 40px">
             <thead>
               <tr>
@@ -236,21 +284,49 @@
                 <td>${{ '%.2f' | format(item.price / item.quantity) }}</td>
                 <td>${{ '%.2f' | format(item.price) }}</td>
                 <td>
-                  <button type="button" class="no-print" onclick="deleteItem('{{item.name}}')">Delete</button>
+                  <button
+                    type="button"
+                    class="no-print"
+                    onclick="deleteItem('{{item.name}}')"
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
               {% endfor %}
             </tbody>
           </table>
-
-          <button
-            type="submit"
-            style="padding: 8px 16px; font-size: 16px; cursor: pointer"
-            class="no-print"
-          >
+          <button type="submit" class="button-fixed-width no-print">
             Recalculate
           </button>
         </form>
+
+        <div id="addItemModal" class="modal">
+          <div class="modal-content">
+            <span class="close">&times;</span>
+            <form id="addItemForm" style="display:grid; justify-content: center;">
+              <h2 style="text-align: center;">Add Item</h2>
+              <label for="newItemType">Type:</label>
+              <select id="newItemType" onchange="updateOptions()">
+                <option value="insert">Insert</option>
+                <option value="cover">Cover</option>
+              </select>
+              <br />
+              <label for="newItemDetails">Details:</label>
+              <select id="newItemDetails">
+                <option value=""></option></select
+              ><br />
+              <input
+                type="number"
+                id="newItemQuantity"
+                placeholder="Quantity"
+              />
+              <br />
+              <button type="button" onclick="addItem()">Submit</button>
+            </form>
+          </div>
+        </div>
+        <button id="myBtn" class="button-fixed-width no-print">Add Item</button>
       </div>
 
       <div class="sactional-info">
@@ -273,23 +349,99 @@
         </div>
       </div>
     </div>
-  <script>
-    function deleteItem(itemName) {
-      fetch('/delete-item',{
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({itemName: itemName.replace(/ /g, '_')})
-      })
-      .then(response => response.json())
-      .then(data => {
-        console.log(data.message);
-        location.reload();
-      })
-      .catch(error => console.error('Error:', error))
-    }
-  </script>
+    <script>
+      function deleteItem(itemName) {
+        fetch("/delete-item", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ itemName: itemName.replace(/ /g, "_") }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(data.message);
+            location.reload();
+          })
+          .catch((error) => console.error("Error:", error));
+      }
+
+      function updateOptions() {
+        const itemType = document.getElementById("newItemType").value;
+        const detailsSelect = document.getElementById("newItemDetails");
+        detailsSelect.innerHTML = "";
+
+        if (itemType === "insert") {
+          Object.keys(class_names).forEach((key) => {
+            const option = document.createElement("option");
+            option.value = class_names[key];
+            option.text = class_names[key].replace("-", " ").capitalize();
+            detailsSelect.appendChild(option);
+          });
+        } else {
+          Object.keys(cover_mapping).forEach((key) => {
+            const option = document.createElement("option");
+            option.value = cover_mapping[key];
+            option.text = cover_mapping[key].replace("-", " ").capitalize();
+            detailsSelect.appendChild(option);
+          });
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", updateOptions);
+
+      function addItem() {
+        const quoteId = "{{quote_id_global}}";
+        const itemType = document.getElementById("newItemType").value;
+        const itemDetails = document.getElementById("newItemDetails").value;
+        const quantity = document.getElementById("newItemQuantity").value;
+
+        if (!quantity) {
+          alert("Please enter a quantity.");
+        }
+
+        const payload = {
+          itemName: itemDetails,
+          quantity: parseInt(quantity, 10),
+        };
+
+        fetch("/add-item/${quoteId}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.message) {
+              console.log(data.message);
+              location.reload();
+            }
+          })
+          .catch((error) => console.error("Error", error));
+      }
+
+      var modal = document.getElementById("addItemModal");
+
+      var btn = document.getElementById("myBtn");
+
+      var span = document.getElementsByClassName("close")[0];
+
+      btn.onclick = function () {
+        modal.style.display = "block";
+      };
+
+      span.onclick = function () {
+        modal.style.display = "none";
+      };
+
+      window.onclick = function (event) {
+        if (event.target === modal) {
+          modal.style.display = "none";
+        }
+      };
+    </script>
   </body>
   <footer class="print-only">
     <p>© 2024 Subin Lebow. All rights reserved.</p>
