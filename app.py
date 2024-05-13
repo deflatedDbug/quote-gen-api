@@ -256,8 +256,11 @@ def generate_quote_endpoint():
         return 'No Image selected', 400
     
     unique_filename = str(uuid.uuid4()) + ".jpg"
-    raw_images_dir = r"C:\Users\Subin Lebow\Desktop\Lovesac-Stuff\quote-gen-api\raw_images" 
+    raw_images_dir = "/app/raw_images" 
     raw_images_path = os.path.join(raw_images_dir, unique_filename) 
+    
+    os.makedirs(raw_images_dir, exist_ok=True)
+
     image_file.save(raw_images_path)
 
     results = model(raw_images_path, save=False)
